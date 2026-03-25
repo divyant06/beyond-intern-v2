@@ -8,21 +8,53 @@ import {
   Home,
   BookOpen,
   Trophy,
-  Award,
+  BadgeCheck,
   Settings,
   ChevronLeft,
   ChevronRight,
-  GraduationCap,
+  Bell,
   LogOut,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 
 const navItems = [
-  { icon: Home, label: "Dashboard", href: "/dashboard" },
-  { icon: BookOpen, label: "My Courses", href: "/dashboard?tab=courses" },
-  { icon: Trophy, label: "Achievements", href: "/dashboard?tab=achievements" },
-  { icon: Award, label: "Certifications", href: "/dashboard?tab=certifications" },
-  { icon: Settings, label: "Settings", href: "/dashboard?tab=settings" },
+  {
+    icon: Home,
+    label: "Dashboard",
+    href: "/dashboard",
+    tooltip: "Main dashboard overview",
+  },
+  {
+    icon: BookOpen,
+    label: "My Courses",
+    href: "/dashboard?tab=courses",
+    tooltip: "View enrolled courses",
+  },
+  {
+    icon: Trophy,
+    label: "Achievements",
+    href: "/dashboard?tab=achievements",
+    tooltip: "Your milestones & badges",
+  },
+  {
+    icon: BadgeCheck,
+    label: "Certifications",
+    href: "/dashboard?tab=certifications",
+    tooltip: "Download certificates",
+  },
+  {
+    icon: Bell,
+    label: "Notifications",
+    href: "/dashboard?tab=notifications",
+    tooltip: "Alerts & updates",
+  },
+  {
+    icon: Settings,
+    label: "Settings",
+    href: "/dashboard?tab=settings",
+    tooltip: "Account & preferences",
+  },
 ];
 
 export function Sidebar() {
@@ -36,9 +68,15 @@ export function Sidebar() {
       className="fixed left-0 top-0 bottom-0 z-40 flex flex-col border-r border-white/5 bg-navy-light/95 backdrop-blur-xl"
     >
       {/* Logo */}
-      <div className="flex items-center gap-2 px-4 h-16">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl gradient-electric">
-          <GraduationCap className="h-4 w-4 text-white" />
+      <div className="flex items-center gap-2 px-4 h-16 overflow-hidden">
+        <div className="shrink-0 flex items-center justify-center h-9 w-9">
+          <Image
+            src="/logo-transparent.png.png"
+            alt="Beyond Intern"
+            width={36}
+            height={36}
+            className="object-contain"
+          />
         </div>
         <AnimatePresence>
           {!collapsed && (
@@ -57,11 +95,13 @@ export function Sidebar() {
       <Separator className="bg-white/5" />
 
       {/* Nav items */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href === "/dashboard" && pathname === "/dashboard");
+          const isActive =
+            pathname === item.href ||
+            (item.href === "/dashboard" && !pathname.includes("?tab=") && pathname === "/dashboard");
           return (
-            <Link key={item.label} href={item.href}>
+            <Link key={item.label} href={item.href} title={collapsed ? item.tooltip : undefined}>
               <motion.div
                 whileHover={{ x: 2 }}
                 className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all cursor-pointer ${
@@ -70,7 +110,9 @@ export function Sidebar() {
                     : "text-slate-400 hover:bg-white/5 hover:text-white"
                 }`}
               >
-                <item.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-electric-light" : ""}`} />
+                <item.icon
+                  className={`h-5 w-5 shrink-0 ${isActive ? "text-electric-light" : ""}`}
+                />
                 <AnimatePresence>
                   {!collapsed && (
                     <motion.span

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
-import { GraduationCap, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -69,9 +70,14 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <Link href="/" className="flex items-center gap-2 mb-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl gradient-electric glow-blue">
-                <GraduationCap className="h-6 w-6 text-white" />
-              </div>
+              <Image
+                src="/logo-transparent.png.png"
+                alt="Beyond Intern Logo"
+                width={150}
+                height={40}
+                className="object-contain"
+                priority
+              />
             </Link>
             <h1 className="text-2xl font-bold text-white">Welcome Back</h1>
             <p className="mt-2 text-sm text-slate-400">

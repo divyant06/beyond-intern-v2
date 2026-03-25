@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { ChatBubble } from "@/components/chatbot/chat-bubble";
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 const inter = Inter({
@@ -45,6 +46,11 @@ export const metadata: Metadata = {
     description:
       "Level up your career with industry-leading courses, live webinars, and mentorship.",
   },
+  icons: {
+    icon: "/logo-transparent.png.png",
+    shortcut: "/logo-transparent.png.png",
+    apple: "/logo-transparent.png.png",
+  },
 };
 
 export default function RootLayout({
@@ -61,6 +67,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <ChatBubble />
+          <Toaster />
         </Providers>
       </body>
     </html>

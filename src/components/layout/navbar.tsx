@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { Menu, GraduationCap, ChevronRight } from "lucide-react";
+import { Menu, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -16,7 +17,8 @@ const navLinks = [
   { name: "Courses", href: "#courses" },
   { name: "Webinars", href: "#webinars" },
   { name: "Reviews", href: "#reviews" },
-  { name: "About", href: "#about" },
+  { name: "About", href: "/about" },
+  { name: "Blog", href: "/blog" },
 ];
 
 export function Navbar() {
@@ -37,15 +39,17 @@ export function Navbar() {
         scrolled ? "glass-nav shadow-lg" : "bg-transparent"
       }`}
     >
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl gradient-electric glow-blue transition-transform group-hover:scale-110">
-            <GraduationCap className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-white">
-            Beyond<span className="gradient-text">Intern</span>
-          </span>
+          <Image
+            src="/logo-transparent.png.png"
+            alt="Beyond Intern Logo"
+            width={150}
+            height={40}
+            className="object-contain"
+            priority
+          />
         </Link>
 
         {/* Desktop Nav */}
@@ -76,7 +80,7 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu — asChild fixes nested <button> hydration error */}
         <Sheet>
           <SheetTrigger>
             <Button
@@ -95,12 +99,13 @@ export function Navbar() {
             <SheetTitle className="sr-only">Navigation menu</SheetTitle>
             <div className="flex flex-col gap-6 pt-8">
               <Link href="/" className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-electric">
-                  <GraduationCap className="h-5 w-5 text-white" />
-                </div>
-                <span className="text-xl font-bold text-white">
-                  Beyond<span className="gradient-text">Intern</span>
-                </span>
+                <Image
+                  src="/logo.jpeg"
+                  alt="Beyond Intern Logo"
+                  width={130}
+                  height={35}
+                  className="object-contain"
+                />
               </Link>
 
               <div className="flex flex-col gap-2 mt-4">

@@ -1,193 +1,383 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Play, Calendar, Clock, Users, ExternalLink } from "lucide-react";
+import {
+  Calendar,
+  Mic,
+  CheckCircle2,
+  Sparkles,
+  ExternalLink,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { showToast } from "@/components/ui/toaster";
+import Link from "next/link";
 
-interface Webinar {
-  id: string;
-  title: string;
-  speaker: string;
-  speakerRole: string;
-  date: string;
-  time: string;
-  attendees: number;
-  status: "live" | "upcoming" | "recorded";
-}
-
-const webinars: Webinar[] = [
-  {
-    id: "1",
-    title: "The Future of AI in Software Engineering",
-    speaker: "Dr. Sarah Chen",
-    speakerRole: "Senior Engineer, Google",
-    date: "March 28, 2026",
-    time: "7:00 PM GMT",
-    attendees: 1250,
-    status: "live",
-  },
-  {
-    id: "2",
-    title: "Breaking into Tech: Panel Discussion",
-    speaker: "Multiple Panelists",
-    speakerRole: "Industry Leaders",
-    date: "April 2, 2026",
-    time: "6:00 PM GMT",
-    attendees: 890,
-    status: "upcoming",
-  },
-  {
-    id: "3",
-    title: "Mastering System Design Interviews",
-    speaker: "Alex Rivera",
-    speakerRole: "Solutions Architect, AWS",
-    date: "April 10, 2026",
-    time: "7:30 PM GMT",
-    attendees: 2100,
-    status: "upcoming",
-  },
-  {
-    id: "4",
-    title: "Building Scalable Microservices",
-    speaker: "Prof. Mark Williams",
-    speakerRole: "CTO, ScaleUp Labs",
-    date: "March 20, 2026",
-    time: "6:00 PM GMT",
-    attendees: 3400,
-    status: "recorded",
-  },
+const CAREER_INTERESTS = [
+  "Marketing",
+  "Finance",
+  "Data Science",
+  "Web Development",
+  "HR",
+  "Entrepreneurship",
 ];
 
-const statusConfig = {
-  live: {
-    label: "🔴 Live Now",
-    className: "bg-rose/20 text-rose border-rose/30",
-  },
-  upcoming: {
-    label: "📅 Upcoming",
-    className: "bg-electric/20 text-electric-light border-electric/30",
-  },
-  recorded: {
-    label: "▶️ Recorded",
-    className: "bg-emerald/20 text-emerald border-emerald/30",
-  },
-};
+const REFERRAL_SOURCES = [
+  "Instagram",
+  "LinkedIn",
+  "WhatsApp",
+  "Friends / Referral",
+  "College",
+  "Others",
+];
 
 export function WebinarSection() {
+  const [interests, setInterests] = useState<string[]>([]);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const toggleInterest = (item: string) => {
+    setInterests((prev) =>
+      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
+    );
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Show toast
+    showToast({
+      title: "Thank you for your response! Your spot is secured. 🎉",
+      description: "We'll send the webinar link to your email before 29th March.",
+    });
+    // Reset form
+    formRef.current?.reset();
+    setInterests([]);
+  };
+
   return (
     <section id="webinars" className="relative py-24 overflow-hidden">
       <div className="absolute inset-0 bg-navy-light/50" />
       <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-electric/20 to-transparent" />
+      {/* Ambient glow */}
+      <div className="absolute -top-40 right-0 h-[500px] w-[500px] rounded-full bg-electric/5 blur-[120px] pointer-events-none" />
 
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+        {/* ── Header ─────────────────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-14"
+          className="mb-14 text-center"
         >
           <Badge className="bg-electric/10 text-electric-light border-electric/20 mb-4">
-            Live & On-Demand
+            Live &amp; On-Demand
           </Badge>
           <h2 className="text-3xl font-bold text-white sm:text-4xl">
             Premium <span className="gradient-text">Webinars</span>
           </h2>
-          <p className="mt-3 text-lg text-slate-400 max-w-xl">
-            Tune in to expert-led sessions. Watch live or catch up on recordings
-            at your own pace.
+          <p className="mt-3 text-lg text-slate-400 max-w-xl mx-auto">
+            Hear from industry experts live. Register below to secure your spot.
           </p>
         </motion.div>
 
-        <div className="grid gap-8 lg:grid-cols-5">
-          {/* Video player area */}
+        <div className="grid gap-10 lg:grid-cols-5 items-start">
+          {/* ── Event Info card ─────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="lg:col-span-3"
+            className="lg:col-span-2 flex flex-col gap-6"
           >
-            <div className="glass-card rounded-2xl overflow-hidden">
-              <div className="relative aspect-video bg-linear-to-br from-electric/20 to-navy-lighter flex items-center justify-center">
-                <div className="absolute inset-0 bg-navy/50" />
-                {/* Play button */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full glass glow-blue cursor-pointer"
-                  aria-label="Play featured webinar"
-                >
-                  <Play className="h-8 w-8 text-white fill-white ml-1" />
-                </motion.button>
-
-                {/* Live badge */}
-                <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-                  <Badge className="bg-rose/90 text-white border-transparent font-semibold">
-                    <span className="mr-1.5 inline-flex h-2 w-2 rounded-full bg-white animate-pulse" />
-                    LIVE
-                  </Badge>
+            <div className="glass-card rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="h-12 w-12 rounded-xl gradient-electric flex items-center justify-center glow-blue shrink-0">
+                  <Sparkles className="h-6 w-6 text-white" />
                 </div>
-
-                <div className="absolute bottom-4 left-4 right-4 z-10">
-                  <h3 className="text-lg font-semibold text-white">
-                    The Future of AI in Software Engineering
+                <div>
+                  <h3 className="font-bold text-white text-lg">
+                    Boost Your Career &amp; Land Internships
                   </h3>
-                  <p className="text-sm text-slate-300 mt-1">
-                    Dr. Sarah Chen · Senior Engineer, Google
-                  </p>
+                  <p className="text-xs text-slate-400">Beyond Intern Live Webinar</p>
                 </div>
               </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 text-sm text-slate-300">
+                  <Calendar className="h-4 w-4 text-electric-light shrink-0" />
+                  <div>
+                    <span className="font-semibold text-white">Date:</span>{" "}
+                    29th March 2026
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-300">
+                  <Mic className="h-4 w-4 text-electric-light shrink-0" />
+                  <div>
+                    <span className="font-semibold text-white">Speaker:</span>{" "}
+                    Nandani Sharma
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-5 border-t border-white/8 space-y-2">
+                {[
+                  "Live Q&A with industry experts",
+                  "Career growth roadmap revealed",
+                  "Exclusive internship referrals",
+                  "Certificate of participation",
+                ].map((benefit) => (
+                  <div key={benefit} className="flex items-center gap-2 text-sm text-slate-300">
+                    <CheckCircle2 className="h-4 w-4 text-emerald shrink-0" />
+                    {benefit}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Upcoming Schedule ────────────────────────────────────── */}
+            <div className="glass-card rounded-2xl p-5">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+                Upcoming Schedule
+              </h4>
+              {[
+                { date: "29 Mar", title: "Career & Internships", status: "live" },
+                { date: "12 Apr", title: "Breaking into Tech 2026", status: "upcoming" },
+                { date: "26 Apr", title: "System Design Masterclass", status: "upcoming" },
+              ].map((w) => (
+                <div
+                  key={w.date}
+                  className="py-2.5 border-b border-white/5 last:border-0"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="text-xs font-semibold text-electric-light w-12">
+                        {w.date}
+                      </div>
+                      <p className="text-xs text-slate-300">{w.title}</p>
+                    </div>
+                    <Badge
+                      className={
+                        w.status === "live"
+                          ? "bg-rose/20 text-rose border-rose/30 text-[10px]"
+                          : "bg-electric/10 text-electric-light border-electric/20 text-[10px]"
+                      }
+                    >
+                      {w.status === "live" ? "🔴 Live" : "📅 Soon"}
+                    </Badge>
+                  </div>
+
+                  {/* ── The Door — Enter Live Room button ── */}
+                  {w.status === "live" && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <Link href="/webinar/live">
+                        <Button className="w-full mt-1 gradient-electric text-white text-xs font-bold rounded-xl glow-blue hover:opacity-90 transition-opacity flex items-center justify-center gap-2 py-2 h-auto">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                          </span>
+                          Enter Live Room
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Button>
+                      </Link>
+                    </motion.div>
+                  )}
+                </div>
+              ))}
             </div>
           </motion.div>
 
-          {/* Webinar list */}
+          {/* ── Registration Form ─────────────────────────────────────────── */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            className="lg:col-span-2 flex flex-col gap-3"
+            className="lg:col-span-3"
           >
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-1">
-              Schedule
-            </h3>
-            {webinars.map((webinar) => {
-              const config = statusConfig[webinar.status];
-              return (
-                <motion.div
-                  key={webinar.id}
-                  whileHover={{ x: 4, scale: 1.01 }}
-                  className="glass-card rounded-xl p-4 cursor-pointer group"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <Badge className={`${config.className} text-[10px] mb-2`}>
-                        {config.label}
-                      </Badge>
-                      <h4 className="text-sm font-semibold text-white line-clamp-1 group-hover:text-electric-light transition-colors">
-                        {webinar.title}
-                      </h4>
-                      <p className="text-xs text-slate-500 mt-1 truncate">
-                        {webinar.speaker} · {webinar.speakerRole}
-                      </p>
+            <div className="glass-card rounded-2xl p-7 relative overflow-hidden">
+              {/* Inner glow accent */}
+              <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-electric/10 blur-3xl pointer-events-none" />
+
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-1">
+                    Register for Free
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Secure your spot in minutes — no credit card required.
+                  </p>
+                </div>
+
+                {/* ── Personal Info ── */}
+                <fieldset>
+                  <legend className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+                    🧾 Personal Information
+                  </legend>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <Input
+                        required
+                        placeholder="Full Name *"
+                        className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                      />
                     </div>
-                    <ExternalLink className="h-4 w-4 text-slate-600 group-hover:text-electric-light transition-colors shrink-0 mt-6" />
+                    <Input
+                      required
+                      type="email"
+                      placeholder="Email Address *"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                    />
+                    <Input
+                      required
+                      type="tel"
+                      placeholder="Phone Number *"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                    />
+                    <div className="sm:col-span-2">
+                      <Input
+                        required
+                        placeholder="City / Location *"
+                        className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                      />
+                    </div>
                   </div>
-                  <div className="mt-3 flex items-center gap-4 text-[11px] text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {webinar.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {webinar.time}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {webinar.attendees.toLocaleString()}
-                    </span>
+                </fieldset>
+
+                {/* ── Academic / Professional ── */}
+                <fieldset>
+                  <legend className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+                    🎓 Academic / Professional Details
+                  </legend>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Select required>
+                      <SelectTrigger className="bg-white/5 border-white/10 text-slate-300 focus:border-electric/50">
+                        <SelectValue placeholder="Current Status *" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-navy-light border-white/10">
+                        <SelectItem value="student" className="text-slate-200 focus:bg-white/10">Student</SelectItem>
+                        <SelectItem value="graduate" className="text-slate-200 focus:bg-white/10">Graduate</SelectItem>
+                        <SelectItem value="professional" className="text-slate-200 focus:bg-white/10">Working Professional</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      required
+                      placeholder="College / Company Name *"
+                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                    />
+                    <div className="sm:col-span-2">
+                      <Input
+                        required
+                        placeholder="Field of Study / Work *"
+                        className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                      />
+                    </div>
                   </div>
-                </motion.div>
-              );
-            })}
+                </fieldset>
+
+                {/* ── Career Interests ── */}
+                <fieldset>
+                  <legend className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+                    💼 Career Interests (select all that apply)
+                  </legend>
+                  <div className="flex flex-wrap gap-2">
+                    {CAREER_INTERESTS.map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => toggleInterest(item)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                          interests.includes(item)
+                            ? "gradient-electric text-white border-transparent glow-blue"
+                            : "border-white/10 text-slate-400 hover:border-white/20 bg-white/5"
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    ))}
+                    <input
+                      placeholder="Others..."
+                      className="text-xs px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-300 placeholder:text-slate-600 outline-none focus:border-electric/40 w-28"
+                    />
+                  </div>
+                </fieldset>
+
+                {/* ── Expectations & Source ── */}
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <Textarea
+                      placeholder="What do you expect to learn from this webinar?"
+                      rows={2}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 resize-none"
+                    />
+                  </div>
+                  <Select>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-slate-300 focus:border-electric/50">
+                      <SelectValue placeholder="Attended webinar before?" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-navy-light border-white/10">
+                      <SelectItem value="yes" className="text-slate-200 focus:bg-white/10">Yes</SelectItem>
+                      <SelectItem value="no" className="text-slate-200 focus:bg-white/10">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select>
+                    <SelectTrigger className="bg-white/5 border-white/10 text-slate-300 focus:border-electric/50">
+                      <SelectValue placeholder="How did you hear about us?" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-navy-light border-white/10">
+                      {REFERRAL_SOURCES.map((src) => (
+                        <SelectItem key={src} value={src.toLowerCase()} className="text-slate-200 focus:bg-white/10">
+                          {src}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* ── Confirmation & Optional ── */}
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      required
+                      className="mt-0.5 h-4 w-4 accent-blue-500 cursor-pointer"
+                    />
+                    <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
+                      I confirm that I will attend the webinar on{" "}
+                      <span className="text-white font-medium">29th March</span>. *
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-4 w-4 accent-blue-500 cursor-pointer"
+                    />
+                    <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
+                      Yes, I&apos;d like to receive internship opportunities from Beyond Intern.
+                    </span>
+                  </label>
+                </div>
+
+                {/* ── Submit ── */}
+                <Button
+                  type="submit"
+                  className="w-full gradient-electric text-white font-bold rounded-xl py-3 text-base glow-blue hover:opacity-90 transition-opacity"
+                >
+                  Secure My Spot
+                  <Sparkles className="ml-2 h-4 w-4" />
+                </Button>
+              </form>
+            </div>
           </motion.div>
         </div>
       </div>

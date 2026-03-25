@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GraduationCap } from "lucide-react";
+import Image from "next/image";
 
 const footerSections = [
   {
@@ -14,9 +14,9 @@ const footerSections = [
   {
     title: "Company",
     links: [
-      { name: "About Us", href: "#about" },
+      { name: "About Us", href: "/about" },
+      { name: "Blog", href: "/blog" },
       { name: "Careers", href: "#" },
-      { name: "Blog", href: "#" },
       { name: "Contact", href: "#" },
     ],
   },
@@ -24,7 +24,7 @@ const footerSections = [
     title: "Support",
     links: [
       { name: "Help Center", href: "#" },
-      { name: "Terms of Service", href: "#" },
+      { name: "Terms of Service", href: "/terms" },
       { name: "Privacy Policy", href: "#" },
       { name: "Cookie Policy", href: "#" },
     ],
@@ -32,10 +32,10 @@ const footerSections = [
 ];
 
 const socials = [
-  { label: "Twitter", icon: "𝕏" },
-  { label: "LinkedIn", icon: "in" },
-  { label: "YouTube", icon: "▶" },
-  { label: "Instagram", icon: "📷" },
+  { label: "Twitter", icon: "𝕏", href: "#" },
+  { label: "LinkedIn", icon: "in", href: "#" },
+  { label: "YouTube", icon: "▶", href: "#" },
+  { label: "Instagram", icon: "📷", href: "#" },
 ];
 
 export function Footer() {
@@ -49,12 +49,13 @@ export function Footer() {
           {/* Brand column */}
           <div className="col-span-2 md:col-span-4 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-electric">
-                <GraduationCap className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-white">
-                Beyond<span className="gradient-text">Intern</span>
-              </span>
+              <Image
+                src="/logo-transparent.png.png"
+                alt="Beyond Intern Logo"
+                width={150}
+                height={40}
+                className="object-contain"
+              />
             </Link>
             <p className="text-sm leading-relaxed text-slate-400 max-w-xs">
               Empowering the next generation of professionals with industry-leading
@@ -64,7 +65,7 @@ export function Footer() {
               {socials.map((social) => (
                 <a
                   key={social.label}
-                  href="#"
+                  href={social.href}
                   aria-label={social.label}
                   className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-slate-400 transition-all hover:bg-electric/20 hover:text-electric-light text-sm"
                 >
@@ -99,10 +100,10 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/5 pt-8 sm:flex-row">
           <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} Beyond Intern. All rights reserved.
+            © 2026 Beyond Intern | All Rights Reserved | Powered by The Writers Company
           </p>
           <p className="text-xs text-slate-500">
-            Built with ❤️ for aspiring professionals worldwide.
+            Built with ❤️ for aspiring professionals & students worldwide.
           </p>
         </div>
       </div>

@@ -8,9 +8,23 @@ import Link from "next/link";
 
 const stats = [
   { icon: Users, value: "10,000+", label: "Active Students" },
-  { icon: BookOpen, value: "50+", label: "Expert Courses" },
-  { icon: Award, value: "95%", label: "Completion Rate" },
+  { icon: BookOpen, value: "28", label: "Expert Courses" },
+  { icon: Award, value: "95%", label: "Placement Rate" },
   { icon: Star, value: "4.9/5", label: "Avg. Rating" },
+];
+
+// Companies to orbit
+const COMPANIES = [
+  "APPLE",
+  "SAMSUNG",
+  "AMAZON AWS",
+  "TESLA",
+  "IBM",
+  "MICROSOFT",
+  "NESTLÉ",
+  "MERCEDES",
+  "MORRISONS",
+  "GARRISONS",
 ];
 
 const container = {
@@ -28,7 +42,83 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: easeOut } },
 };
 
+// Orbital ring component
+function OrbitalRing({
+  companies,
+  radius,
+  duration,
+  direction = 1,
+  dotColor = "bg-electric/50",
+  labelClass = "text-slate-400",
+  dotCount = 60,
+}: {
+  companies: string[];
+  radius: number;
+  duration: number;
+  direction?: 1 | -1;
+  dotColor?: string;
+  labelClass?: string;
+  dotCount?: number;
+}) {
+  return (
+    <motion.div
+      className="absolute inset-0 flex items-center justify-center"
+      animate={{ rotate: direction * 360 }}
+      transition={{ duration, repeat: Infinity, ease: "linear" }}
+    >
+      {/* Orbit path dots */}
+      {Array.from({ length: dotCount }).map((_, i) => {
+        const angle = (i / dotCount) * 2 * Math.PI;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        const opacity = i % 6 === 0 ? 0.6 : 0.15;
+        return (
+          <div
+            key={i}
+            className={`absolute h-1 w-1 rounded-full ${dotColor}`}
+            style={{
+              left: `calc(50% + ${x}px - 2px)`,
+              top: `calc(50% + ${y}px - 2px)`,
+              opacity,
+            }}
+          />
+        );
+      })}
+
+      {/* Company labels along the ring */}
+      {companies.map((company, i) => {
+        const angle = (i / companies.length) * 2 * Math.PI;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        return (
+          <motion.div
+            key={company}
+            className="absolute"
+            style={{
+              left: `calc(50% + ${x}px)`,
+              top: `calc(50% + ${y}px)`,
+              transform: "translate(-50%, -50%)",
+            }}
+            // Counter-rotate labels so text stays upright
+            animate={{ rotate: direction * -360 }}
+            transition={{ duration, repeat: Infinity, ease: "linear" }}
+          >
+            <div
+              className={`glass px-2.5 py-1 rounded-full border border-white/10 text-[10px] font-semibold tracking-widest whitespace-nowrap cursor-default transition-all hover:scale-110 ${labelClass}`}
+            >
+              {company}
+            </div>
+          </motion.div>
+        );
+      })}
+    </motion.div>
+  );
+}
+
 export function HeroSection() {
+  const outerRing = COMPANIES.slice(0, 5);
+  const innerRing = COMPANIES.slice(5, 10);
+
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden pt-20">
       {/* Background effects */}
@@ -95,71 +185,97 @@ export function HeroSection() {
               </Link>
             </motion.div>
 
-            {/* Trust logos placeholder */}
-            <motion.div variants={item} className="mt-12">
-              <p className="text-xs uppercase tracking-widest text-slate-500 mb-4">
-                Trusted by teams at
-              </p>
-              <div className="flex flex-wrap items-center gap-6">
-                {["Google", "Microsoft", "Meta", "Amazon", "IBM"].map((co) => (
-                  <span
-                    key={co}
-                    className="text-sm font-medium text-slate-500/60 tracking-wide"
-                  >
-                    {co}
-                  </span>
-                ))}
-              </div>
+            {/* Trust stats row */}
+            <motion.div variants={item} className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {stats.map((stat) => (
+                <div key={stat.label} className="glass rounded-xl p-3 text-center border border-white/5">
+                  <stat.icon className="mx-auto mb-1.5 h-4 w-4 text-electric-light" />
+                  <p className="text-lg font-bold text-white">{stat.value}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{stat.label}</p>
+                </div>
+              ))}
             </motion.div>
           </motion.div>
 
-          {/* Right — Floating stat cards */}
+          {/* Right — 3D Orbital ring system */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-            className="relative hidden lg:block"
+            transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
+            className="relative hidden lg:flex items-center justify-center"
           >
-            {/* Main glass card */}
-            <div className="relative mx-auto w-[420px] h-[420px]">
-              {/* Decorative ring */}
-              <div className="absolute inset-4 rounded-full border border-dashed border-white/10 animate-spin" style={{ animationDuration: "30s" }} />
-              <div className="absolute inset-12 rounded-full border border-dashed border-electric/10 animate-spin" style={{ animationDuration: "20s", animationDirection: "reverse" }} />
+            {/* Container sized to the outer orbit */}
+            <div className="relative w-[460px] h-[460px]">
+              {/* Subtle background glow */}
+              <div className="absolute inset-0 rounded-full bg-electric/5 blur-3xl" />
 
-              {/* Stat cards floating around */}
-              {stats.map((stat, i) => {
-                const positions = [
-                  "top-0 left-1/2 -translate-x-1/2",
-                  "top-1/2 right-0 -translate-y-1/2",
-                  "bottom-0 left-1/2 -translate-x-1/2",
-                  "top-1/2 left-0 -translate-y-1/2",
-                ];
-                return (
-                  <motion.div
-                    key={stat.label}
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      delay: i * 0.5,
-                      ease: "easeInOut",
-                    }}
-                    className={`absolute ${positions[i]} z-10`}
+              {/* Outer orbital ring — 5 companies, slow, clockwise */}
+              <OrbitalRing
+                companies={outerRing}
+                radius={200}
+                duration={40}
+                direction={1}
+                dotColor="bg-electric/30"
+                labelClass="text-slate-400 hover:text-electric-light"
+                dotCount={72}
+              />
+
+              {/* Inner orbital ring — 5 companies, medium, counter-clockwise */}
+              <OrbitalRing
+                companies={innerRing}
+                radius={130}
+                duration={28}
+                direction={-1}
+                dotColor="bg-gold/30"
+                labelClass="text-slate-300 hover:text-gold-light"
+                dotCount={48}
+              />
+
+              {/* Static decorative rings (CSS) */}
+              <div
+                className="absolute inset-0 rounded-full border border-dashed border-white/5"
+                style={{ margin: "30px" }}
+              />
+
+              {/* Center badge — pulsing glow */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                <motion.div
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="glass-card rounded-2xl px-6 py-5 text-center glow-blue"
+                >
+                  <div
+                    className="text-3xl font-black gradient-text tracking-tight"
+                    style={{ fontFamily: "inherit" }}
                   >
-                    <div className="glass-card rounded-2xl p-4 min-w-[140px] text-center hover:scale-105 transition-transform cursor-default">
-                      <stat.icon className="mx-auto mb-2 h-5 w-5 text-electric-light" />
-                      <p className="text-xl font-bold text-white">{stat.value}</p>
-                      <p className="text-xs text-slate-400 mt-1">{stat.label}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-
-              {/* Center badge */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 glass-card rounded-2xl p-6 text-center animate-pulse-glow">
-                <div className="text-3xl font-bold gradient-text">BI</div>
-                <p className="text-xs text-slate-400 mt-1">Premium</p>
+                    BI
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">
+                    Premium
+                  </p>
+                </motion.div>
               </div>
+
+              {/* Floating stat cards around the orbital (4 corners) */}
+              {[
+                { stat: stats[0], pos: "top-0 left-4", delay: 0 },
+                { stat: stats[1], pos: "top-0 right-4", delay: 0.5 },
+                { stat: stats[2], pos: "bottom-0 left-4", delay: 1 },
+                { stat: stats[3], pos: "bottom-0 right-4", delay: 1.5 },
+              ].map(({ stat, pos, delay }) => (
+                <motion.div
+                  key={stat.label}
+                  className={`absolute ${pos} z-20`}
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, delay, ease: "easeInOut" }}
+                >
+                  <div className="glass-card rounded-xl p-3 text-center min-w-[110px] hover:scale-105 transition-transform cursor-default">
+                    <stat.icon className="mx-auto mb-1 h-4 w-4 text-electric-light" />
+                    <p className="text-base font-bold text-white">{stat.value}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{stat.label}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         </div>
