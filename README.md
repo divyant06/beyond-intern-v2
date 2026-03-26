@@ -51,4 +51,4 @@ As the platform scales, the architecture is primed for the following expansions:
 4. **React Native Mobile App:** Leveraging the existing Next.js API routes to power a native iOS/Android application.
 
 ---
-*Developed and maintained by [Your Name/Company]. For inquiries, contact info@beyondintern.com*
+*Developed and maintained by divyant06 aka Anshu ( www.linkedin.com/in/divyant-poddar-4b6672313 ) For inquiries, contact info@beyondintern.com*
