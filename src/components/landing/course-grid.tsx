@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Clock, ArrowRight, BookOpen, Filter } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, ArrowRight, BookOpen, Filter, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
@@ -187,11 +187,18 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
 // ── Main Section ───────────────────────────────────────────────────────────────
 export function CourseGrid() {
   const [activeFilter, setActiveFilter] = useState<string>("All");
+  const [showAll, setShowAll] = useState(false);
 
   const filtered =
     activeFilter === "All"
       ? courseData
       : courseData.filter((c) => c.category === activeFilter);
+
+  // Show 6 initially when "All" is active; show everything when filtered
+  const isFiltered = activeFilter !== "All";
+  const visibleCourses = isFiltered || showAll ? filtered : filtered.slice(0, 6);
+  const hasMore = !isFiltered && !showAll && filtered.length > 6;
+
 
   return (
     <section id="courses" className="relative py-24 overflow-hidden">
@@ -229,7 +236,10 @@ export function CourseGrid() {
           {ALL_CATEGORIES.map((cat) => (
             <button
               key={cat}
-              onClick={() => setActiveFilter(cat)}
+              onClick={() => {
+                setActiveFilter(cat);
+                setShowAll(false); // Reset pagination when changing filter
+              }}
               className={`text-xs font-medium px-4 py-1.5 rounded-full border transition-all ${
                 activeFilter === cat
                   ? "gradient-electric text-white border-transparent glow-blue"
@@ -243,10 +253,31 @@ export function CourseGrid() {
 
         {/* Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((course, i) => (
+          {visibleCourses.map((course, i) => (
             <CourseCard key={course.id} course={course} index={i} />
           ))}
         </div>
+
+        {/* View All button */}
+        <AnimatePresence>
+          {hasMore && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mt-10 flex justify-center"
+            >
+              <Button
+                onClick={() => setShowAll(true)}
+                variant="outline"
+                className="rounded-full px-8 py-3 border-white/15 text-white hover:bg-white/5 hover:border-white/25 text-sm font-semibold gap-2 transition-all"
+              >
+                View All {filtered.length} Courses
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Bottom CTA */}
         <motion.div
