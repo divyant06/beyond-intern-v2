@@ -6,47 +6,55 @@ import { Clock, ArrowRight, BookOpen, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import Image from "next/image";
 import { courseData, type Course } from "@/lib/courses";
 
 // ── Category config ────────────────────────────────────────────────────────────
 const categoryConfig: Record<
   string,
-  { icon: string; gradient: string; color: string }
+  { icon: string; gradient: string; color: string; image: string }
 > = {
   "Technical Skills": {
     icon: "💻",
     gradient: "from-blue-600/30 to-cyan-500/20",
     color: "text-blue-400",
+    image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&h=400&fit=crop",
   },
   "Analytical Skills": {
     icon: "📊",
     gradient: "from-emerald-600/30 to-teal-500/20",
     color: "text-emerald-400",
+    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop",
   },
   "Marketing & Sales": {
     icon: "📢",
     gradient: "from-orange-600/30 to-amber-500/20",
     color: "text-amber-400",
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop",
   },
   "Professional & Soft Skills": {
     icon: "🧠",
     gradient: "from-purple-600/30 to-pink-500/20",
     color: "text-purple-400",
+    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop",
   },
   "Finance & Investment": {
     icon: "📈",
     gradient: "from-green-600/30 to-emerald-500/20",
     color: "text-green-400",
+    image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop",
   },
   "Creative Skills": {
     icon: "🎨",
     gradient: "from-rose-600/30 to-fuchsia-500/20",
     color: "text-rose-400",
+    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop",
   },
   "Career Readiness": {
     icon: "🚀",
     gradient: "from-indigo-600/30 to-violet-500/20",
     color: "text-indigo-400",
+    image: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=600&h=400&fit=crop",
   },
 };
 
@@ -78,8 +86,15 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
       <div
         className={`relative h-44 bg-linear-to-br ${config.gradient} flex items-center justify-center overflow-hidden`}
       >
-        <div className="absolute inset-0 bg-navy/40" />
-        <span className="relative z-10 text-6xl opacity-25 group-hover:opacity-40 group-hover:scale-110 transition-all duration-500">
+        <Image
+          src={config.image}
+          alt={course.title}
+          fill
+          className="object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        />
+        <div className="absolute inset-0 bg-navy/50" />
+        <span className="relative z-10 text-5xl opacity-30">
           {config.icon}
         </span>
 

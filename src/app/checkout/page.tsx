@@ -8,26 +8,32 @@ import {
   Lock,
   CreditCard,
   CheckCircle2,
-  Star,
   Clock,
-  Users,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { courseData as allCourses } from "@/lib/courses";
 
-const courseData: Record<string, { title: string; price: number; originalPrice: number; instructor: string; duration: string; students: number; rating: number; gradient: string }> = {
-  "1": { title: "Full-Stack Web Development Masterclass", price: 79, originalPrice: 149, instructor: "Dr. Sarah Chen", duration: "42 hours", students: 3420, rating: 4.9, gradient: "from-blue-600/30 to-cyan-500/20" },
-  "2": { title: "Data Science & Machine Learning with Python", price: 89, originalPrice: 179, instructor: "Prof. Mark Williams", duration: "56 hours", students: 2890, rating: 4.8, gradient: "from-emerald-600/30 to-teal-500/20" },
-  "3": { title: "UX/UI Design: From Concept to Prototype", price: 69, originalPrice: 129, instructor: "Lisa Nakamura", duration: "38 hours", students: 1950, rating: 4.9, gradient: "from-purple-600/30 to-pink-500/20" },
-  "4": { title: "Cloud Architecture & DevOps on AWS", price: 99, originalPrice: 199, instructor: "Alex Rivera", duration: "48 hours", students: 2100, rating: 4.7, gradient: "from-orange-600/30 to-amber-500/20" },
-  "5": { title: "Product Management & Strategy Bootcamp", price: 59, originalPrice: 119, instructor: "Rachel Torres", duration: "30 hours", students: 1680, rating: 4.8, gradient: "from-rose-600/30 to-red-500/20" },
-  "6": { title: "Cybersecurity Fundamentals & Ethical Hacking", price: 85, originalPrice: 169, instructor: "David Kim", duration: "44 hours", students: 2340, rating: 4.9, gradient: "from-indigo-600/30 to-violet-500/20" },
+const gradientMap: Record<string, string> = {
+  "Technical Skills": "from-blue-600/30 to-cyan-500/20",
+  "Analytical Skills": "from-emerald-600/30 to-teal-500/20",
+  "Marketing & Sales": "from-orange-600/30 to-amber-500/20",
+  "Professional & Soft Skills": "from-purple-600/30 to-pink-500/20",
+  "Finance & Investment": "from-green-600/30 to-emerald-500/20",
+  "Creative Skills": "from-rose-600/30 to-fuchsia-500/20",
+  "Career Readiness": "from-indigo-600/30 to-violet-500/20",
 };
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
-  const courseId = searchParams.get("course") || "1";
-  const course = courseData[courseId] || courseData["1"];
+  const courseId = searchParams.get("course") || "";
+  const foundCourse = allCourses.find((c) => c.id === courseId);
+  const courseTitle = foundCourse?.title ?? "Beyond Intern Course";
+  const coursePrice = foundCourse?.price ?? 950;
+  const courseCategory = foundCourse?.category ?? "Technical Skills";
+  const courseDuration = foundCourse?.duration ?? "12–20 Weeks";
+  const courseGradient = gradientMap[courseCategory] ?? "from-blue-600/30 to-cyan-500/20";
   const [loading, setLoading] = useState(false);
 
   const handlePayment = async () => {
@@ -38,8 +44,8 @@ function CheckoutContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           courseId,
-          courseName: course.title,
-          price: course.price,
+          courseName: courseTitle,
+          price: coursePrice,
         }),
       });
       const data = await res.json();
@@ -82,26 +88,22 @@ function CheckoutContent() {
             className="lg:col-span-3"
           >
             <div className="glass-card rounded-2xl overflow-hidden">
-              <div className={`h-48 bg-linear-to-br ${course.gradient} flex items-center justify-center`}>
+              <div className={`h-48 bg-linear-to-br ${courseGradient} flex items-center justify-center`}>
                 <div className="absolute inset-0 bg-navy/30" />
                 <span className="relative z-10 text-6xl opacity-40">🎓</span>
               </div>
               <div className="p-6">
-                <h2 className="text-xl font-semibold text-white">{course.title}</h2>
-                <p className="text-sm text-slate-400 mt-1">by {course.instructor}</p>
+                <h2 className="text-xl font-semibold text-white">{courseTitle}</h2>
+                <p className="text-sm text-slate-400 mt-1">{courseCategory}</p>
 
                 <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-400">
                   <span className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-gold text-gold" />
-                    {course.rating}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    {course.students.toLocaleString()} students
-                  </span>
-                  <span className="flex items-center gap-1">
                     <Clock className="h-4 w-4" />
-                    {course.duration}
+                    {courseDuration}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <BookOpen className="h-4 w-4" />
+                    Lifetime Access
                   </span>
                 </div>
 
@@ -136,18 +138,16 @@ function CheckoutContent() {
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between text-slate-300">
-                  <span>Course price</span>
-                  <span className="line-through text-slate-500">£{course.originalPrice}</span>
+                  <span>Course</span>
+                  <span className="text-white">{courseTitle}</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
-                  <span>Discount</span>
-                  <span className="text-emerald">
-                    -£{course.originalPrice - course.price}
-                  </span>
+                  <span>Duration</span>
+                  <span>{courseDuration}</span>
                 </div>
                 <div className="border-t border-white/10 pt-3 flex justify-between text-white font-semibold text-lg">
                   <span>Total</span>
-                  <span>£{course.price}</span>
+                  <span>£{coursePrice}</span>
                 </div>
               </div>
 
@@ -165,7 +165,7 @@ function CheckoutContent() {
                 ) : (
                   <>
                     <CreditCard className="mr-2 h-4 w-4" />
-                    Pay £{course.price} Now
+                    Pay £{coursePrice} Now
                   </>
                 )}
               </Button>

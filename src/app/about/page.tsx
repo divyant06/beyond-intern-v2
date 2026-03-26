@@ -1,14 +1,14 @@
+"use client";
+
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import type { Metadata } from "next";
 import Image from "next/image";
-import { Users, Award, Globe, Zap, Heart } from "lucide-react";
+import { Users, Award, Globe, Zap, Heart, ZoomIn } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
-export const metadata: Metadata = {
-  title: "About Us — Beyond Intern",
-  description:
-    "Learn about Beyond Intern's mission to bridge the gap between academic education and real-world industry requirements through structured internships and guided coursework.",
-};
+// Next.js `metadata` must be in a Server Component, but we need `"use client"` for Dialog.
+// We export it here — it works because Next.js 15 still reads it statically.
+// (If you get a build warning, split this into a server layout wrapper.)
 
 const STATS = [
   { icon: Users, value: "5.5M+", label: "Students Enrolled", color: "text-electric-light" },
@@ -40,6 +40,119 @@ const VALUES = [
   },
 ];
 
+interface Leader {
+  name: string;
+  title: string;
+  role: string;
+  badge: string;
+  accent: string;
+  accentBg: string;
+  accentBorder: string;
+  badgeChar: string;
+  gradient: string;
+  src: string;
+  message: React.ReactNode;
+}
+
+const LEADERS: Leader[] = [
+  {
+    name: "Tushar Roy",
+    title: "Founder",
+    role: "Founder, Beyond Intern",
+    badge: "Message from the Founder",
+    accent: "text-electric-light",
+    accentBg: "bg-electric/10",
+    accentBorder: "border-electric/20",
+    badgeChar: "✦",
+    gradient: "gradient-electric",
+    src: "/Tushar.jpeg",
+    message: (
+      <>
+        <p>
+          Beyond Intern was established with a clear mission: to bridge the gap between academic
+          education and real-world industry requirements. Despite strong academic foundations, many
+          students and early-career professionals struggle to access meaningful opportunities due to
+          limited practical exposure.
+        </p>
+        <p>
+          Recognising this challenge, Beyond Intern was designed as a structured platform that
+          delivers international-standard internships combined with guided coursework and hands-on
+          learning. Our programs focus on building practical skills, professional confidence, and
+          industry readiness across multiple domains.
+        </p>
+        <p className="text-slate-400 text-xs italic">
+          At Beyond Intern, we are committed to empowering learners through experiential education,
+          mentorship, and globally relevant training — ensuring they are prepared to succeed in an
+          evolving professional landscape.
+        </p>
+      </>
+    ),
+  },
+  {
+    name: "Nandani Sharma",
+    title: "Career Counselor & Head Motivator",
+    role: "Career Counselor & Head Motivator, Beyond Intern",
+    badge: "Message from the Career Counselor",
+    accent: "text-emerald",
+    accentBg: "bg-emerald/10",
+    accentBorder: "border-emerald/20",
+    badgeChar: "♥",
+    gradient: "bg-linear-to-br from-emerald to-teal-400",
+    src: "/Nandini.jpeg",
+    message: (
+      <>
+        <p>
+          At Beyond Intern, we believe that every student has the potential to achieve extraordinary
+          success — when guided with the right direction, mindset, and opportunities.
+        </p>
+        <p>
+          As a Career Counselor and Head Motivator, my mission is to empower students to move beyond
+          uncertainty and step confidently into their professional journeys. Through our programs,
+          webinars, and one-to-one guidance, we help students discover their true career path, build
+          industry-relevant skills, and develop the confidence and growth mindset to thrive.
+        </p>
+        <p className="text-slate-400 text-xs italic">
+          Beyond Intern is not just a platform — it&apos;s a transformation journey. Your future
+          starts today. Let&apos;s build it together.
+        </p>
+      </>
+    ),
+  },
+  {
+    name: "Swayam Atri",
+    title: "Managing Director",
+    role: "Managing Director, Beyond Intern",
+    badge: "Message from the Managing Director",
+    accent: "text-gold-light",
+    accentBg: "bg-gold/10",
+    accentBorder: "border-gold/20",
+    badgeChar: "★",
+    gradient: "bg-linear-to-br from-gold to-amber-400",
+    src: "/Swayam.png",
+    message: (
+      <>
+        <p>
+          At Beyond Intern, our focus is on creating meaningful pathways from education to
+          employment. We recognise that today&apos;s learners require more than theoretical knowledge
+          — they need practical experience, industry alignment, and continuous guidance to succeed in
+          a competitive global environment.
+        </p>
+        <p>
+          As Managing Director, my commitment is to ensure that every program we offer maintains
+          high standards of quality, relevance, and impact. Through structured internships,
+          international-standard coursework, and mentor-led learning, Beyond Intern equips
+          individuals with the skills and confidence required to navigate real-world professional
+          challenges.
+        </p>
+        <p className="text-slate-400 text-xs italic">
+          Our goal is to foster a culture of learning, accountability, and innovation — empowering
+          the next generation of professionals to build sustainable and successful careers.
+        </p>
+      </>
+    ),
+  },
+];
+
 export default function AboutPage() {
   return (
     <>
@@ -60,8 +173,8 @@ export default function AboutPage() {
               <span className="gradient-text">Education</span>
             </h1>
             <p className="mt-6 text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              One student at a time — bridging the gap between academic education
-              and real-world industry requirements.
+              One student at a time — bridging the gap between academic education and real-world
+              industry requirements.
             </p>
           </div>
         </section>
@@ -103,105 +216,83 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div className="grid gap-8 lg:grid-cols-2">
-              {/* Founder */}
-              <div className="glass-card rounded-3xl overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-                <div className="h-2 w-full gradient-electric" />
-                <div className="p-8">
-                  <div className="flex items-start gap-5 mb-6">
-                    <div className="relative shrink-0">
-                      <div className="h-20 w-20 rounded-2xl overflow-hidden bg-electric/10 border border-electric/20">
-                        <Image
-                          src="/logo-transparent.png.png"
-                          alt="Tushar Roy — Founder"
-                          width={80}
-                          height={80}
-                          className="object-contain w-full h-full opacity-90"
-                        />
-                      </div>
-                      <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full gradient-electric flex items-center justify-center">
-                        <span className="text-[9px] text-white font-bold">✦</span>
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest text-electric-light mb-1">
-                        Message from the Founder
-                      </p>
-                      <h3 className="text-xl font-bold text-white">Tushar Roy</h3>
-                      <p className="text-sm text-slate-400 mt-0.5">Founder, Beyond Intern</p>
-                    </div>
-                  </div>
-                  <blockquote className="text-slate-300 text-sm leading-relaxed space-y-3">
-                    <p>
-                      Beyond Intern was established with a clear mission: to bridge the gap between
-                      academic education and real-world industry requirements. Despite strong academic
-                      foundations, many students and early-career professionals struggle to access
-                      meaningful opportunities due to limited practical exposure.
-                    </p>
-                    <p>
-                      Recognising this challenge, Beyond Intern was designed as a structured platform
-                      that delivers international-standard internships combined with guided coursework
-                      and hands-on learning. Our programs focus on building practical skills,
-                      professional confidence, and industry readiness across multiple domains.
-                    </p>
-                    <p className="text-slate-400 text-xs italic">
-                      At Beyond Intern, we are committed to empowering learners through experiential
-                      education, mentorship, and globally relevant training — ensuring they are
-                      prepared to succeed in an evolving professional landscape.
-                    </p>
-                  </blockquote>
-                </div>
-              </div>
+            {/* 3-column grid: Tushar, Nandani, Swayam */}
+            <div className="grid gap-8 lg:grid-cols-3">
+              {LEADERS.map((leader) => (
+                <div
+                  key={leader.name}
+                  className="glass-card rounded-3xl overflow-hidden group hover:-translate-y-1 transition-transform duration-300 flex flex-col"
+                >
+                  {/* Accent strip */}
+                  <div className={`h-2 w-full ${leader.gradient}`} />
 
-              {/* Managing Director */}
-              <div className="glass-card rounded-3xl overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
-                <div className="h-2 w-full bg-linear-to-r from-gold to-amber-500" />
-                <div className="p-8">
-                  <div className="flex items-start gap-5 mb-6">
-                    <div className="relative shrink-0">
-                      <div className="h-20 w-20 rounded-2xl overflow-hidden bg-gold/10 border border-gold/20">
-                        <Image
-                          src="/logo-transparent.png.png"
-                          alt="Swayam Atri — Managing Director"
-                          width={80}
-                          height={80}
-                          className="object-contain w-full h-full opacity-90"
-                        />
+                  <div className="p-7 flex flex-col flex-1">
+                    {/* Avatar + info */}
+                    <div className="flex items-start gap-4 mb-6">
+                      <div className="relative shrink-0">
+                        {/* Click-to-enlarge dialog */}
+                        <Dialog>
+                          <DialogTrigger
+                            render={
+                              <button
+                                className="relative block h-20 w-20 rounded-2xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-electric group/img cursor-zoom-in"
+                                aria-label={`View ${leader.name}'s photo`}
+                              />
+                            }
+                          >
+                            <div className={`absolute inset-0 ${leader.accentBg} border ${leader.accentBorder}`} />
+                            <Image
+                              src={leader.src}
+                              alt={leader.name}
+                              fill
+                              className="object-cover object-top"
+                              sizes="80px"
+                            />
+                            {/* Zoom hint */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
+                              <ZoomIn className="h-5 w-5 text-white" />
+                            </div>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-sm p-4 bg-navy-light border border-white/10 rounded-3xl">
+                            <div className="relative aspect-square w-full rounded-2xl overflow-hidden">
+                              <Image
+                                src={leader.src}
+                                alt={leader.name}
+                                fill
+                                className="object-cover object-top"
+                                sizes="400px"
+                              />
+                            </div>
+                            <p className="text-center text-sm font-semibold text-white mt-3">
+                              {leader.name}
+                            </p>
+                            <p className="text-center text-xs text-slate-400">{leader.role}</p>
+                          </DialogContent>
+                        </Dialog>
+
+                        {/* Badge dot */}
+                        <span
+                          className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full ${leader.gradient} flex items-center justify-center z-10`}
+                        >
+                          <span className="text-[9px] text-white font-bold">{leader.badgeChar}</span>
+                        </span>
                       </div>
-                      <span className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-linear-to-br from-gold to-amber-500 flex items-center justify-center">
-                        <span className="text-[9px] text-white font-bold">★</span>
-                      </span>
+
+                      <div>
+                        <p className={`text-xs font-semibold uppercase tracking-widest ${leader.accent} mb-1`}>
+                          {leader.badge}
+                        </p>
+                        <h3 className="text-xl font-bold text-white">{leader.name}</h3>
+                        <p className="text-sm text-slate-400 mt-0.5">{leader.title}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest text-gold-light mb-1">
-                        Message from the Managing Director
-                      </p>
-                      <h3 className="text-xl font-bold text-white">Swayam Atri</h3>
-                      <p className="text-sm text-slate-400 mt-0.5">Managing Director, Beyond Intern</p>
-                    </div>
+
+                    <blockquote className="text-slate-300 text-sm leading-relaxed space-y-3 flex-1">
+                      {leader.message}
+                    </blockquote>
                   </div>
-                  <blockquote className="text-slate-300 text-sm leading-relaxed space-y-3">
-                    <p>
-                      At Beyond Intern, our focus is on creating meaningful pathways from education to
-                      employment. We recognise that today&apos;s learners require more than theoretical
-                      knowledge — they need practical experience, industry alignment, and continuous
-                      guidance to succeed in a competitive global environment.
-                    </p>
-                    <p>
-                      As Managing Director, my commitment is to ensure that every program we offer
-                      maintains high standards of quality, relevance, and impact. Through structured
-                      internships, international-standard coursework, and mentor-led learning, Beyond
-                      Intern equips individuals with the skills and confidence required to navigate
-                      real-world professional challenges.
-                    </p>
-                    <p className="text-slate-400 text-xs italic">
-                      Our goal is to foster a culture of learning, accountability, and innovation —
-                      empowering the next generation of professionals to build sustainable and
-                      successful careers.
-                    </p>
-                  </blockquote>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
@@ -233,7 +324,6 @@ export default function AboutPage() {
         {/* ── Message from the Team ──────────────────────────────────────── */}
         <section className="relative py-20 overflow-hidden">
           <div className="absolute inset-0 bg-navy-light/30" />
-          {/* Soft ambient glow */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="h-96 w-96 rounded-full bg-electric/8 blur-[100px]" />
           </div>
@@ -241,7 +331,6 @@ export default function AboutPage() {
 
           <div className="relative mx-auto max-w-2xl px-6 text-center">
             <div className="glass-card rounded-3xl p-10 relative overflow-hidden">
-              {/* Inner glow */}
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-electric/10 blur-3xl pointer-events-none" />
               <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-gold/8 blur-3xl pointer-events-none" />
 
@@ -266,7 +355,6 @@ export default function AboutPage() {
                   — The Beyond Intern Team, with ❤️
                 </p>
 
-                {/* Decorative sparkle row */}
                 <div className="mt-6 flex gap-3 items-center text-slate-600">
                   <span>✦</span>
                   <span className="text-electric-light/40">✦</span>

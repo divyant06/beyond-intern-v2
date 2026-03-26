@@ -17,13 +17,13 @@ const footerSections = [
       { name: "About Us", href: "/about" },
       { name: "Blog", href: "/blog" },
       { name: "Careers", href: "#" },
-      { name: "Contact", href: "#" },
+      { name: "Contact", href: "/contact" },
     ],
   },
   {
     title: "Support",
     links: [
-      { name: "Help Center", href: "#" },
+      { name: "Help Center", href: "/contact" },
       { name: "Terms of Service", href: "/terms" },
       { name: "Privacy Policy", href: "#" },
       { name: "Cookie Policy", href: "#" },

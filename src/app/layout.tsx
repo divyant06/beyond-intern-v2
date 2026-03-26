@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { Providers } from "@/components/providers";
-import { ChatBubble } from "@/components/chatbot/chat-bubble";
+import { ChatBubble } from "@/components/chatbot/chatbot";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 

@@ -5,6 +5,7 @@ import type { Easing } from "framer-motion";
 import { ArrowRight, Play, Users, BookOpen, Award, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { ClientOnly } from "@/components/shared/client-only";
 
 const stats = [
   { icon: Users, value: "10,000+", label: "Active Students" },
@@ -42,7 +43,11 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: easeOut } },
 };
 
-// Orbital ring component
+// ─── Orbital ring — Math.cos/sin positions are purely deterministic
+//     so they match between server and client. However, Framer Motion's
+//     `animate` (infinite rotation) must only run on the client to avoid
+//     hydration warnings from internal React reconciliation. This component
+//     is always rendered inside <ClientOnly> so that's guaranteed.
 function OrbitalRing({
   companies,
   radius,
@@ -99,7 +104,6 @@ function OrbitalRing({
               top: `calc(50% + ${y}px)`,
               transform: "translate(-50%, -50%)",
             }}
-            // Counter-rotate labels so text stays upright
             animate={{ rotate: direction * -360 }}
             transition={{ duration, repeat: Infinity, ease: "linear" }}
           >
@@ -115,13 +119,37 @@ function OrbitalRing({
   );
 }
 
+// Stable orbital placeholder — same dimensions, no animations
+// Prevents layout shift while ClientOnly waits for mount
+function OrbitalFallback() {
+  return (
+    <div className="relative w-[460px] h-[460px] flex items-center justify-center">
+      <div className="absolute inset-0 rounded-full bg-electric/5 blur-3xl" />
+      {/* Static dashed ring so the layout slot isn't invisible */}
+      <div
+        className="absolute inset-0 rounded-full border border-dashed border-white/8"
+        style={{ margin: "30px" }}
+      />
+      {/* Center badge (static version) */}
+      <div className="glass-card rounded-2xl px-6 py-5 text-center">
+        <div className="text-3xl font-black gradient-text tracking-tight">
+          BI
+        </div>
+        <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">
+          Premium
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function HeroSection() {
   const outerRing = COMPANIES.slice(0, 5);
   const innerRing = COMPANIES.slice(5, 10);
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden pt-20">
-      {/* Background effects */}
+      {/* Background effects — purely CSS, safe on server */}
       <div className="absolute inset-0 gradient-bg" />
       <div className="absolute top-1/4 -left-32 h-96 w-96 rounded-full bg-electric/10 blur-[120px]" />
       <div className="absolute bottom-1/4 -right-32 h-96 w-96 rounded-full bg-gold/8 blur-[120px]" />
@@ -129,7 +157,7 @@ export function HeroSection() {
 
       <div className="relative mx-auto max-w-7xl px-6 py-20 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* Left — Text */}
+          {/* Left — Text (Framer Motion enter animations are fine on client components) */}
           <motion.div
             variants={container}
             initial="hidden"
@@ -186,98 +214,124 @@ export function HeroSection() {
             </motion.div>
 
             {/* Trust stats row */}
-            <motion.div variants={item} className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <motion.div
+              variants={item}
+              className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-4"
+            >
               {stats.map((stat) => (
-                <div key={stat.label} className="glass rounded-xl p-3 text-center border border-white/5">
+                <div
+                  key={stat.label}
+                  className="glass rounded-xl p-3 text-center border border-white/5"
+                >
                   <stat.icon className="mx-auto mb-1.5 h-4 w-4 text-electric-light" />
                   <p className="text-lg font-bold text-white">{stat.value}</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{stat.label}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    {stat.label}
+                  </p>
                 </div>
               ))}
             </motion.div>
           </motion.div>
 
-          {/* Right — 3D Orbital ring system */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-            className="relative hidden lg:flex items-center justify-center"
-          >
-            {/* Container sized to the outer orbit */}
-            <div className="relative w-[460px] h-[460px]">
-              {/* Subtle background glow */}
-              <div className="absolute inset-0 rounded-full bg-electric/5 blur-3xl" />
+          {/* Right — 3D Orbital ring system
+              Wrapped in ClientOnly to prevent hydration mismatch from
+              Framer Motion's infinite animations running during SSR.
+              The fallback renders the same-sized container so there's
+              no layout shift when the client mounts. */}
+          <div className="relative hidden lg:flex items-center justify-center">
+            <ClientOnly fallback={<OrbitalFallback />}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.85 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
+                className="relative w-[460px] h-[460px]"
+              >
+                {/* Subtle background glow */}
+                <div className="absolute inset-0 rounded-full bg-electric/5 blur-3xl" />
 
-              {/* Outer orbital ring — 5 companies, slow, clockwise */}
-              <OrbitalRing
-                companies={outerRing}
-                radius={200}
-                duration={40}
-                direction={1}
-                dotColor="bg-electric/30"
-                labelClass="text-slate-400 hover:text-electric-light"
-                dotCount={72}
-              />
+                {/* Outer orbital ring — 5 companies, slow, clockwise */}
+                <OrbitalRing
+                  companies={outerRing}
+                  radius={200}
+                  duration={40}
+                  direction={1}
+                  dotColor="bg-electric/30"
+                  labelClass="text-slate-400 hover:text-electric-light"
+                  dotCount={72}
+                />
 
-              {/* Inner orbital ring — 5 companies, medium, counter-clockwise */}
-              <OrbitalRing
-                companies={innerRing}
-                radius={130}
-                duration={28}
-                direction={-1}
-                dotColor="bg-gold/30"
-                labelClass="text-slate-300 hover:text-gold-light"
-                dotCount={48}
-              />
+                {/* Inner orbital ring — 5 companies, medium, counter-clockwise */}
+                <OrbitalRing
+                  companies={innerRing}
+                  radius={130}
+                  duration={28}
+                  direction={-1}
+                  dotColor="bg-gold/30"
+                  labelClass="text-slate-300 hover:text-gold-light"
+                  dotCount={48}
+                />
 
-              {/* Static decorative rings (CSS) */}
-              <div
-                className="absolute inset-0 rounded-full border border-dashed border-white/5"
-                style={{ margin: "30px" }}
-              />
+                {/* Static decorative ring */}
+                <div
+                  className="absolute inset-0 rounded-full border border-dashed border-white/5"
+                  style={{ margin: "30px" }}
+                />
 
-              {/* Center badge — pulsing glow */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                <motion.div
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="glass-card rounded-2xl px-6 py-5 text-center glow-blue"
-                >
-                  <div
-                    className="text-3xl font-black gradient-text tracking-tight"
-                    style={{ fontFamily: "inherit" }}
+                {/* Center badge — pulsing glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="glass-card rounded-2xl px-6 py-5 text-center glow-blue"
                   >
-                    BI
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">
-                    Premium
-                  </p>
-                </motion.div>
-              </div>
+                    <div
+                      className="text-3xl font-black gradient-text tracking-tight"
+                      style={{ fontFamily: "inherit" }}
+                    >
+                      BI
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">
+                      Premium
+                    </p>
+                  </motion.div>
+                </div>
 
-              {/* Floating stat cards around the orbital (4 corners) */}
-              {[
-                { stat: stats[0], pos: "top-0 left-4", delay: 0 },
-                { stat: stats[1], pos: "top-0 right-4", delay: 0.5 },
-                { stat: stats[2], pos: "bottom-0 left-4", delay: 1 },
-                { stat: stats[3], pos: "bottom-0 right-4", delay: 1.5 },
-              ].map(({ stat, pos, delay }) => (
-                <motion.div
-                  key={stat.label}
-                  className={`absolute ${pos} z-20`}
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, delay, ease: "easeInOut" }}
-                >
-                  <div className="glass-card rounded-xl p-3 text-center min-w-[110px] hover:scale-105 transition-transform cursor-default">
-                    <stat.icon className="mx-auto mb-1 h-4 w-4 text-electric-light" />
-                    <p className="text-base font-bold text-white">{stat.value}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{stat.label}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+                {/* Floating stat cards around the orbital (4 corners) */}
+                {[
+                  { stat: stats[0], pos: "top-0 left-4", delay: 0 },
+                  { stat: stats[1], pos: "top-0 right-4", delay: 0.5 },
+                  { stat: stats[2], pos: "bottom-0 left-4", delay: 1 },
+                  { stat: stats[3], pos: "bottom-0 right-4", delay: 1.5 },
+                ].map(({ stat, pos, delay }) => (
+                  <motion.div
+                    key={stat.label}
+                    className={`absolute ${pos} z-20`}
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      delay,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <div className="glass-card rounded-xl p-3 text-center min-w-[110px] hover:scale-105 transition-transform cursor-default">
+                      <stat.icon className="mx-auto mb-1 h-4 w-4 text-electric-light" />
+                      <p className="text-base font-bold text-white">
+                        {stat.value}
+                      </p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        {stat.label}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </ClientOnly>
+          </div>
         </div>
       </div>
     </section>

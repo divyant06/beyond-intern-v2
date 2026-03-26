@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Menu, ChevronRight } from "lucide-react";
+import { Menu, ChevronRight, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -12,17 +12,19 @@ import {
   SheetTrigger,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useSession, signOut } from "next-auth/react";
 
 const navLinks = [
-  { name: "Courses", href: "#courses" },
-  { name: "Webinars", href: "#webinars" },
-  { name: "Reviews", href: "#reviews" },
+  { name: "Courses", href: "/#courses" },
+  { name: "Webinars", href: "/#webinars" },
   { name: "About", href: "/about" },
   { name: "Blog", href: "/blog" },
+  { name: "Contact", href: "/contact" },
 ];
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -65,32 +67,80 @@ export function Navbar() {
           ))}
         </div>
 
-        {/* Desktop Actions */}
+        {/* Desktop Actions — Dynamic based on auth state */}
         <div className="hidden items-center gap-3 md:flex">
-          <Link href="/login">
-            <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-white/5">
-              Login
-            </Button>
-          </Link>
-          <Link href="/login">
-            <Button className="gradient-electric text-white font-semibold rounded-full px-6 glow-blue hover:opacity-90 transition-opacity">
-              Get Started
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          </Link>
+          {status === "loading" ? (
+            <div className="h-9 w-20 rounded-full bg-white/5 animate-pulse" />
+          ) : session?.user ? (
+            /* Logged in: show avatar, name, sign out */
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2.5 rounded-full glass px-3 py-1.5 border border-white/10 hover:border-electric/30 transition-colors group"
+              >
+                {session.user.image ? (
+                  <Image
+                    src={session.user.image}
+                    alt={session.user.name || "User"}
+                    width={28}
+                    height={28}
+                    className="rounded-full ring-2 ring-electric/40"
+                  />
+                ) : (
+                  <div className="h-7 w-7 rounded-full gradient-electric flex items-center justify-center text-xs font-bold text-white">
+                    {(session.user.name || session.user.email || "U")
+                      .charAt(0)
+                      .toUpperCase()}
+                  </div>
+                )}
+                <span className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
+                  {session.user.name || session.user.email?.split("@")[0]}
+                </span>
+              </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="text-slate-400 hover:text-red-400 hover:bg-red-500/10 gap-1.5"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+          ) : (
+            /* Logged out: show Login / Get Started */
+            <>
+              <Link href="/login">
+                <Button
+                  variant="ghost"
+                  className="text-slate-300 hover:text-white hover:bg-white/5"
+                >
+                  Login
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button className="gradient-electric text-white font-semibold rounded-full px-6 glow-blue hover:opacity-90 transition-opacity">
+                  Get Started
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
-        {/* Mobile Menu — asChild fixes nested <button> hydration error */}
+        {/* Mobile Menu */}
         <Sheet>
-          <SheetTrigger>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden text-white hover:bg-white/10"
-              aria-label="Open menu"
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
+          <SheetTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden text-white hover:bg-white/10"
+                aria-label="Open menu"
+              />
+            }
+          >
+            <Menu className="h-6 w-6" />
           </SheetTrigger>
           <SheetContent
             side="right"
@@ -100,13 +150,43 @@ export function Navbar() {
             <div className="flex flex-col gap-6 pt-8">
               <Link href="/" className="flex items-center gap-2">
                 <Image
-                  src="/logo.jpeg"
+                  src="/logo-transparent.png.png"
                   alt="Beyond Intern Logo"
                   width={130}
                   height={35}
                   className="object-contain"
                 />
               </Link>
+
+              {/* User info in mobile (if logged in) */}
+              {session?.user && (
+                <div className="flex items-center gap-3 px-4 py-3 glass rounded-xl border border-white/10">
+                  {session.user.image ? (
+                    <Image
+                      src={session.user.image}
+                      alt={session.user.name || "User"}
+                      width={36}
+                      height={36}
+                      className="rounded-full ring-2 ring-electric/40"
+                    />
+                  ) : (
+                    <div className="h-9 w-9 rounded-full gradient-electric flex items-center justify-center text-sm font-bold text-white">
+                      {(session.user.name || session.user.email || "U")
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      {session.user.name ||
+                        session.user.email?.split("@")[0]}
+                    </p>
+                    <p className="text-[11px] text-slate-400">
+                      {session.user.email}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col gap-2 mt-4">
                 {navLinks.map((link) => (
@@ -122,16 +202,39 @@ export function Navbar() {
               </div>
 
               <div className="flex flex-col gap-3 mt-6 border-t border-white/10 pt-6">
-                <Link href="/login">
-                  <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/5">
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/login">
-                  <Button className="w-full gradient-electric text-white font-semibold rounded-full glow-blue">
-                    Get Started
-                  </Button>
-                </Link>
+                {session?.user ? (
+                  <>
+                    <Link href="/dashboard">
+                      <Button className="w-full gradient-electric text-white font-semibold rounded-full glow-blue">
+                        Dashboard
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      className="w-full border-white/20 text-red-400 hover:bg-red-500/10 hover:text-red-300 gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/login">
+                      <Button
+                        variant="outline"
+                        className="w-full border-white/20 text-white hover:bg-white/5"
+                      >
+                        Login
+                      </Button>
+                    </Link>
+                    <Link href="/login">
+                      <Button className="w-full gradient-electric text-white font-semibold rounded-full glow-blue">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </SheetContent>
