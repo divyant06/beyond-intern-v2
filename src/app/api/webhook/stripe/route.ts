@@ -23,7 +23,7 @@ function getSupabaseAdmin() {
 }
 
 // ── Disable Next.js body parsing — Stripe needs the raw bytes to verify ──────
-export const config = { api: { bodyParser: false } };
+
 
 // ── POST /api/webhook/stripe ──────────────────────────────────────────────────
 export async function POST(req: Request) {
