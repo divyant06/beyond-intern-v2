@@ -122,7 +122,7 @@ export default function TermsPage() {
           <div className="absolute top-20 left-1/3 h-80 w-80 rounded-full bg-electric/5 blur-[120px]" />
           <div className="relative mx-auto max-w-3xl px-6 text-center">
             <span className="inline-block px-4 py-1.5 rounded-full bg-electric/10 text-electric-light text-sm font-medium border border-electric/20 mb-5">
-              ⚖️ Legal
+              Legal
             </span>
             <h1 className="text-4xl sm:text-5xl font-bold text-white">
               Terms of <span className="gradient-text">Use</span>

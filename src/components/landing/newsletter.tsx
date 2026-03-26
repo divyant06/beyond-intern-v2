@@ -105,7 +105,7 @@ export function Newsletter() {
           </motion.div>
 
           <p className="mt-4 text-xs text-slate-600">
-            No spam, ever. Unsubscribe anytime. 🔒
+            No spam, ever. Unsubscribe anytime.
           </p>
         </motion.div>
       </div>

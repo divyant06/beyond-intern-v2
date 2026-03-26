@@ -19,7 +19,7 @@ const contacts = [
     label: "Career Counselor & Head Motivator",
     name: "Nandani Sharma",
     lines: [{ type: "email", value: "nandani.sharma@beyondintern.com" }],
-    emoji: "🎓",
+
   },
   {
     icon: Mail,
@@ -30,7 +30,7 @@ const contacts = [
     label: "Team Beyond Intern",
     name: "Success & Placements",
     lines: [{ type: "email", value: "success@beyondintern.com" }],
-    emoji: "🏆",
+
   },
   {
     icon: MessageSquare,
@@ -41,7 +41,7 @@ const contacts = [
     label: "Technical Team",
     name: "Platform & Engineering",
     lines: [{ type: "email", value: "technical@beyondintern.com" }],
-    emoji: "⚙️",
+
   },
   {
     icon: MapPin,
@@ -59,7 +59,7 @@ const contacts = [
         value: "FF09-JTM Mall, Jagatpura, Jaipur, Rajasthan, India",
       },
     ],
-    emoji: "🏢",
+
   },
 ];
 
@@ -103,7 +103,7 @@ export default function ContactPage() {
                     <div className={`h-12 w-12 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center`}>
                       <c.icon className={`h-6 w-6 ${c.color}`} />
                     </div>
-                    <span className="text-2xl">{c.emoji}</span>
+
                   </div>
 
                   {/* Label & name */}

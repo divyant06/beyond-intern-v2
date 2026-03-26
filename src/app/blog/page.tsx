@@ -123,7 +123,7 @@ export default function BlogPage() {
           <div className="absolute top-20 left-1/4 h-80 w-80 rounded-full bg-electric/5 blur-[120px]" />
           <div className="relative mx-auto max-w-4xl px-6 text-center">
             <span className="inline-block px-4 py-2 rounded-full bg-electric/10 text-electric-light text-sm font-medium border border-electric/20 mb-6">
-              ✍️ Beyond Intern Blog
+              Beyond Intern Blog
             </span>
             <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight">
               Insights to{" "}

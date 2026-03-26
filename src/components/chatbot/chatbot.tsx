@@ -16,8 +16,8 @@ interface ApiMessage {
   content: string;
 }
 
-// Sleek corporate logo SVG — replaces the generic Bot icon
-function AdvisorIcon({ className = "" }: { className?: string }) {
+// Clean, minimal chat bubble SVG — professional assistant look
+function AssistantIcon({ className = "" }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -26,18 +26,14 @@ function AdvisorIcon({ className = "" }: { className?: string }) {
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
-        d="M12 2L3 7v10l9 5 9-5V7l-9-5z"
+        d="M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 0 1-4.255-.964L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeLinejoin="round"
       />
-      <path
-        d="M12 22V12M3 7l9 5 9-5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="12" r="2" fill="currentColor" />
+      <circle cx="9" cy="12" r="1" fill="currentColor" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" />
+      <circle cx="15" cy="12" r="1" fill="currentColor" />
     </svg>
   );
 }
@@ -49,7 +45,7 @@ export function ChatBubble() {
       id: "welcome",
       role: "assistant",
       content:
-        "Hey there! 👋 I'm your Beyond Intern AI Advisor. I can help you pick the perfect course track, explain platform benefits, or answer any questions. What can I help you with today?",
+        "Hey there! 👋 I'm your Beyond Intern Assistant. I can help you pick the perfect course track, explain platform benefits, or answer any questions. What can I help you with today?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -184,14 +180,14 @@ export function ChatBubble() {
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/40 bg-slate-900/60 backdrop-blur-md">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <AdvisorIcon className="h-5 w-5 text-white" />
+                  <div className="h-9 w-9 rounded-xl bg-linear-to-br from-blue-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <AssistantIcon className="h-5 w-5 text-white" />
                   </div>
                   <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-slate-900" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">
-                    BI AI Advisor
+                    BI Assistant
                   </p>
                   <p className="text-[10px] text-emerald-400 font-medium">
                     Online
@@ -219,14 +215,14 @@ export function ChatBubble() {
                   className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   {msg.role === "assistant" && (
-                    <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center shrink-0 mt-1 shadow-sm">
-                      <AdvisorIcon className="h-3.5 w-3.5 text-white" />
+                    <div className="h-7 w-7 rounded-lg bg-linear-to-br from-blue-500 to-cyan-400 flex items-center justify-center shrink-0 mt-1 shadow-sm">
+                      <AssistantIcon className="h-3.5 w-3.5 text-white" />
                     </div>
                   )}
                   <div
                     className={`max-w-[78%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                       msg.role === "user"
-                        ? "bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-br-sm shadow-md shadow-blue-500/20"
+                        ? "bg-linear-to-br from-blue-500 to-cyan-500 text-white rounded-br-sm shadow-md shadow-blue-500/20"
                         : "bg-slate-800/60 text-slate-200 rounded-bl-sm border border-slate-700/40"
                     }`}
                   >
@@ -259,7 +255,7 @@ export function ChatBubble() {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex gap-2.5 justify-start"
                 >
-                  <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-rose-500 to-red-500 flex items-center justify-center shrink-0 mt-1">
+                  <div className="h-7 w-7 rounded-lg bg-linear-to-br from-rose-500 to-red-500 flex items-center justify-center shrink-0 mt-1">
                     <X className="h-3.5 w-3.5 text-white" />
                   </div>
                   <div className="max-w-[78%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed bg-rose-500/10 text-rose-300 border border-rose-500/20 rounded-bl-sm">
@@ -287,7 +283,7 @@ export function ChatBubble() {
                   type="submit"
                   disabled={!input.trim() || isLoading}
                   size="icon"
-                  className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white hover:opacity-90 disabled:opacity-30 shadow-lg shadow-blue-500/20 transition-all"
+                  className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-500 to-cyan-500 text-white hover:opacity-90 disabled:opacity-30 shadow-lg shadow-blue-500/20 transition-all"
                   aria-label="Send message"
                 >
                   <Send className="h-4 w-4" />
@@ -303,7 +299,7 @@ export function ChatBubble() {
         onClick={() => setIsOpen(!isOpen)}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30 cursor-pointer"
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30 cursor-pointer"
         aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         <AnimatePresence mode="wait">

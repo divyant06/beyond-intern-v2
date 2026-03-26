@@ -5,10 +5,10 @@ const footerSections = [
   {
     title: "Platform",
     links: [
-      { name: "Courses", href: "#courses" },
-      { name: "Webinars", href: "#webinars" },
-      { name: "Pricing", href: "#courses" },
-      { name: "For Teams", href: "#" },
+      { name: "Courses", href: "/#courses" },
+      { name: "Webinars", href: "/#webinars" },
+      { name: "Pricing", href: "/#courses" },
+      { name: "For Teams", href: "/contact" },
     ],
   },
   {
@@ -16,7 +16,7 @@ const footerSections = [
     links: [
       { name: "About Us", href: "/about" },
       { name: "Blog", href: "/blog" },
-      { name: "Careers", href: "#" },
+      { name: "Careers", href: "/careers" },
       { name: "Contact", href: "/contact" },
     ],
   },
@@ -25,8 +25,8 @@ const footerSections = [
     links: [
       { name: "Help Center", href: "/contact" },
       { name: "Terms of Service", href: "/terms" },
-      { name: "Privacy Policy", href: "#" },
-      { name: "Cookie Policy", href: "#" },
+      { name: "Privacy Policy", href: "/privacy" },
+      { name: "Cookie Policy", href: "/cookie" },
     ],
   },
 ];
