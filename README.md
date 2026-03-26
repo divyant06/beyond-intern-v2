@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Beyond Intern | The Premium EdTech Platform
 
-## Getting Started
+Beyond Intern is an enterprise-grade, full-stack educational platform engineered to bridge the gap between academic learning and industry demands. Built with a focus on high performance, modern aesthetic (glassmorphism), and AI-driven user engagement, the platform delivers a seamless experience from course discovery to checkout and learning.
 
-First, run the development server:
+## 🚀 The Competitive Edge: Why This Architecture Excels
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Unlike legacy LMS platforms (like WordPress/LearnDash or basic React apps), Beyond Intern is built on a modern, edge-ready architecture:
+* **Blazing Fast Performance:** Utilizing Next.js 15 App Router and React Server Components (RSC) to ship zero-client-side JavaScript where possible, resulting in near-instant page loads and perfect Core Web Vitals.
+* **Intelligent AI Integration:** Features a custom-built, streaming AI Advisor powered by Google's Gemini 2.0 Flash model, integrated directly into the UI without feeling like a generic "wrapper."
+* **Enterprise-Grade Security:** Session management via NextAuth (OAuth & Magic Links), completely severing the frontend from raw database access.
+* **High-Converting UI/UX:** Heavily optimized user flows, premium Tailwind CSS styling, translucent glassmorphism interfaces, and dynamic data pagination for frictionless browsing.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 💻 Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Frontend & Core Framework:**
+* **Next.js 15** (App Router, Server Actions, Turbopack)
+* **React** (Hooks, Suspense, Concurrent Features)
+* **Tailwind CSS** (Custom theme, complex gradients, Backdrop Blur utilities)
+* **Framer Motion / Tailwind Animate** (Fluid transitions and component reveals)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Backend & Infrastructure:**
+* **Supabase (PostgreSQL):** Relational database with Row Level Security (RLS).
+* **NextAuth.js:** Secure authentication (Google OAuth provider + Email).
+* **Stripe API:** PCI-compliant checkout processing and secure webhook listeners.
+* **Vercel:** Edge network deployment and CI/CD pipeline.
+* **Google Generative AI SDK:** Streaming LLM integration (Gemini 2.0 Flash).
 
-## Learn More
+## ✨ Core Features & Components
 
-To learn more about Next.js, take a look at the following resources:
+* **AI Learning Advisor (`@chatbot.tsx`):** A floating, context-aware AI assistant that guides users toward the right career tracks, utilizing streaming server responses for zero-latency communication.
+* **Dynamic Course Engine (`@course-grid.tsx`):** A responsive, paginated grid rendering high-fidelity course cards with dynamic pricing, categorization, and Unsplash API image handling.
+* **Secure Checkout Flow (`@checkout/page.tsx`):** Server-side price validation preventing client-side manipulation, seamlessly handing off to Stripe Checkout.
+* **Student Dashboard (`@dashboard/page.tsx`):** A personalized, authenticated hub tracking active courses, learning streaks, and gamified achievement badges.
+* **Live Webinar System (`@webinar/page.tsx`):** Time-aware event scheduling with conditional logic for "Live", "Soon", and "Past" states, integrated with lead-capture forms.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🗄️ Database Schema (Overview)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The platform relies on a normalized PostgreSQL database designed for scale. Key tables include:
+* `Users`: Manages authentications, roles (student/admin), and profile metadata.
+* `Courses`: Stores curriculum data, pricing, duration, and categorization.
+* `Enrollments`: Junction table tracking `user_id`, `course_id`, payment status, and progress metrics.
+* `Webinar_Registrations`: Captures lead data for upcoming live events.
+* `Transactions`: Audit trail for Stripe payment intents and webhook receipts.
 
-## Deploy on Vercel
+## 🔮 Future Scope & Roadmap
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+As the platform scales, the architecture is primed for the following expansions:
+1. **Proprietary Video Hosting:** Integrating an HLS video streaming provider (like Mux or AWS MediaLive) for DRM-protected course consumption directly within the dashboard.
+2. **B2B Team Portals:** Building a separate tenant for enterprise clients to buy bulk seats and track employee learning metrics.
+3. **Advanced AI Tutoring:** Expanding the Gemini integration to read specific course transcripts and provide context-aware homework help to enrolled students.
+4. **React Native Mobile App:** Leveraging the existing Next.js API routes to power a native iOS/Android application.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+*Developed and maintained by [Your Name/Company]. For inquiries, contact info@beyondintern.com*
