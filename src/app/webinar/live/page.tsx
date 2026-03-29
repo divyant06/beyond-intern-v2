@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Play,
   Heart,
   Flame,
   HandMetal,
@@ -15,11 +14,15 @@ import {
   CheckCircle2,
   Mail,
   User,
+  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { showToast } from "@/components/ui/toaster";
 import Image from "next/image";
+
+// ─── Twitch Configuration ────────────────────────────────────────
+// Swap this with your real Twitch channel name
+const TWITCH_CHANNEL = "beyondintern";
 
 const WEBINAR_DATE = new Date("2026-03-29T14:00:00Z");
 
@@ -52,14 +55,58 @@ function getWebinarStatus(date: Date): { label: string; color: string; dotColor:
 
 export default function LiveTheaterPage() {
   const [floaters, setFloaters] = useState<FloatingEmoji[]>([]);
-  const [viewerCount] = useState(1247);
 
-  // Registration form state
+  // ── Stream state ──
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [viewerCount, setViewerCount] = useState(0);
+
+  // ── Registration form state ──
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [registered, setRegistered] = useState(false);
 
   const status = useMemo(() => getWebinarStatus(WEBINAR_DATE), []);
+
+  // ── Organic Viewer Count Fluctuation ──
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    if (!isStreaming) {
+      timeoutId = setTimeout(() => setViewerCount(0), 0);
+      return () => clearTimeout(timeoutId);
+    }
+
+    // Set initial viewer count asynchronously to avoid cascading renders
+    timeoutId = setTimeout(() => {
+      const initialCount = Math.floor(Math.random() * 601) + 1200;
+      setViewerCount(initialCount);
+
+      const fluctuate = () => {
+        // Random interval between 3-8 seconds
+        const nextDelay = (Math.random() * 5 + 3) * 1000;
+        timeoutId = setTimeout(() => {
+          setViewerCount((prev) => {
+            const delta = Math.floor(Math.random() * 5) + 2;
+            const direction = Math.random() > 0.45 ? 1 : -1;
+            const newCount = prev + delta * direction;
+            return Math.max(800, Math.min(2500, newCount));
+          });
+          fluctuate();
+        }, nextDelay);
+      };
+
+      fluctuate();
+    }, 0);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isStreaming]);
+
+  // ── Join Stream ──
+  const handleJoinStream = () => {
+    setIsStreaming(true);
+  };
 
   const handleReaction = (reaction: (typeof reactions)[0]) => {
     setFloaters((prev) => {
@@ -71,13 +118,6 @@ export default function LiveTheaterPage() {
         ...prev,
         { id, icon: reaction.icon, color: reaction.color, x: Math.random() * 60 + 20 },
       ];
-    });
-  };
-
-  const handlePlay = () => {
-    showToast({
-      title: "Webinars will be available soon live on beyondintern.com!",
-      description: "Thank you for your interest! We'll notify you the moment we go live.",
     });
   };
 
@@ -122,10 +162,10 @@ export default function LiveTheaterPage() {
           />
         </div>
 
-        {/* Viewer count */}
+        {/* Viewer count in header */}
         <div className="flex items-center gap-2 text-slate-400 text-sm">
           <Users className="h-4 w-4" />
-          <span>{viewerCount.toLocaleString()} watching</span>
+          <span>{viewerCount > 0 ? viewerCount.toLocaleString() : "—"} watching</span>
         </div>
       </header>
 
@@ -162,7 +202,7 @@ export default function LiveTheaterPage() {
             className="relative w-full max-w-4xl aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-2xl"
             style={{ boxShadow: "0 0 80px rgba(59,130,246,0.12)" }}
           >
-            {/* Glass background */}
+            {/* Glass background (visible behind iframe / under the join button) */}
             <div className="absolute inset-0 bg-linear-to-br from-navy-light/90 via-navy/95 to-[#030714]" />
             <div className="absolute inset-0 backdrop-blur-sm" />
 
@@ -176,44 +216,89 @@ export default function LiveTheaterPage() {
               }}
             />
 
-            {/* Scanline shimmer */}
-            <motion.div
-              animate={{ y: ["0%", "100%"] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-x-0 h-24 bg-linear-to-b from-transparent via-electric/3 to-transparent pointer-events-none"
-            />
+            {/* Scanline shimmer (only before stream) */}
+            {!isStreaming && (
+              <motion.div
+                animate={{ y: ["0%", "100%"] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-x-0 h-24 bg-linear-to-b from-transparent via-electric/3 to-transparent pointer-events-none"
+              />
+            )}
 
-            {/* Center content */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-5">
-              <p className="text-slate-500 text-xs uppercase tracking-widest font-medium">
-                Stream initialising...
-              </p>
+            {/* ─── Live Viewer Badge (top-right) ─────────────────── */}
+            <AnimatePresence>
+              {isStreaming && viewerCount > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="absolute top-4 right-4 z-30 flex items-center gap-2 bg-black/60 backdrop-blur-md border border-white/10 rounded-full px-3.5 py-1.5 shadow-lg"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                  </span>
+                  <span className="text-white text-xs font-semibold tracking-wide">
+                    {viewerCount.toLocaleString()} watching
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-              {/* Play button */}
-              <motion.button
-                onClick={handlePlay}
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.95 }}
-                className="relative flex h-20 w-20 items-center justify-center rounded-full gradient-electric glow-blue cursor-pointer"
+            {/* ─── Twitch Embed (shown when streaming) ─────────── */}
+            {isStreaming && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="absolute inset-0 z-20"
               >
-                <motion.div
-                  animate={{ scale: [1, 1.7], opacity: [0.4, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute inset-0 rounded-full border-2 border-electric"
+                <iframe
+                  src={`https://player.twitch.tv/?channel=${TWITCH_CHANNEL}&parent=localhost&parent=www.beyondintern.com&parent=beyondintern.com`}
+                  frameBorder="0"
+                  allowFullScreen={true}
+                  scrolling="no"
+                  className="w-full h-full rounded-2xl bg-black"
+                  title="Beyond Intern Live Stream"
                 />
-                <motion.div
-                  animate={{ scale: [1, 2.2], opacity: [0.25, 0] }}
-                  transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
-                  className="absolute inset-0 rounded-full border border-electric"
-                />
-                <Play className="h-8 w-8 text-white fill-white ml-1" />
-              </motion.button>
+              </motion.div>
+            )}
 
-              <p className="text-slate-400 text-sm">Click to join the stream</p>
-            </div>
+            {/* ─── Join Button (shown when NOT streaming) ─────── */}
+            {!isStreaming && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 z-10">
+                <p className="text-slate-500 text-xs uppercase tracking-widest font-medium">
+                  Ready to join the webinar
+                </p>
+
+                <motion.button
+                  onClick={handleJoinStream}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative flex items-center gap-3 px-8 py-4 rounded-full gradient-electric glow-blue cursor-pointer"
+                >
+                  {/* Pulse rings */}
+                  <motion.div
+                    animate={{ scale: [1, 1.7], opacity: [0.4, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-0 rounded-full border-2 border-electric"
+                  />
+                  <motion.div
+                    animate={{ scale: [1, 2.2], opacity: [0.25, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 0.4 }}
+                    className="absolute inset-0 rounded-full border border-electric"
+                  />
+
+                  <Video className="h-5 w-5 text-white" />
+                  <span className="text-white font-semibold text-sm">Join Webinar</span>
+                </motion.button>
+
+                <p className="text-slate-400 text-sm">Click to join the live stream</p>
+              </div>
+            )}
 
             {/* ─── Reaction buttons ─────────────────────────────── */}
-            <div className="absolute bottom-5 right-5 flex gap-2">
+            <div className="absolute bottom-5 right-5 flex gap-2 z-30">
               {reactions.map((r) => (
                 <motion.button
                   key={r.label}
@@ -237,7 +322,7 @@ export default function LiveTheaterPage() {
                   animate={{ opacity: 0, y: -120, scale: 1.4 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 1.6, ease: "easeOut" }}
-                  className="absolute bottom-16 pointer-events-none"
+                  className="absolute bottom-16 pointer-events-none z-30"
                   style={{ left: `${f.x}%` }}
                 >
                   <f.icon className={`h-7 w-7 ${f.color}`} />
