@@ -3,9 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Heart,
-  Flame,
-  HandMetal,
   ArrowLeft,
   Radio,
   Users,
@@ -26,18 +23,7 @@ const TWITCH_CHANNEL = "beyondintern";
 
 const WEBINAR_DATE = new Date("2026-03-29T14:00:00Z");
 
-const reactions = [
-  { icon: Heart, label: "Love", color: "text-rose-400", bg: "bg-rose-500/20 border-rose-500/30" },
-  { icon: HandMetal, label: "Clap", color: "text-amber-400", bg: "bg-amber-500/20 border-amber-500/30" },
-  { icon: Flame, label: "Fire", color: "text-orange-400", bg: "bg-orange-500/20 border-orange-500/30" },
-];
 
-interface FloatingEmoji {
-  id: number;
-  icon: typeof Heart;
-  color: string;
-  x: number;
-}
 
 function getWebinarStatus(date: Date): { label: string; color: string; dotColor: string; animate: boolean } {
   const now = new Date();
@@ -54,7 +40,6 @@ function getWebinarStatus(date: Date): { label: string; color: string; dotColor:
 }
 
 export default function LiveTheaterPage() {
-  const [floaters, setFloaters] = useState<FloatingEmoji[]>([]);
 
   // ── Stream state ──
   const [isStreaming, setIsStreaming] = useState(false);
@@ -108,18 +93,7 @@ export default function LiveTheaterPage() {
     setIsStreaming(true);
   };
 
-  const handleReaction = (reaction: (typeof reactions)[0]) => {
-    setFloaters((prev) => {
-      const id = Date.now() + Math.random();
-      setTimeout(() => {
-        setFloaters((p) => p.filter((f) => f.id !== id));
-      }, 1800);
-      return [
-        ...prev,
-        { id, icon: reaction.icon, color: reaction.color, x: Math.random() * 60 + 20 },
-      ];
-    });
-  };
+
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
@@ -297,38 +271,7 @@ export default function LiveTheaterPage() {
               </div>
             )}
 
-            {/* ─── Reaction buttons ─────────────────────────────── */}
-            <div className="absolute bottom-5 right-5 flex gap-2 z-30">
-              {reactions.map((r) => (
-                <motion.button
-                  key={r.label}
-                  onClick={() => handleReaction(r)}
-                  whileHover={{ scale: 1.12, y: -2 }}
-                  whileTap={{ scale: 0.9 }}
-                  className={`flex items-center justify-center h-10 w-10 rounded-full border backdrop-blur-sm transition-all ${r.bg}`}
-                  aria-label={r.label}
-                >
-                  <r.icon className={`h-5 w-5 ${r.color}`} />
-                </motion.button>
-              ))}
-            </div>
 
-            {/* Floating emoji reactions */}
-            <AnimatePresence>
-              {floaters.map((f) => (
-                <motion.div
-                  key={f.id}
-                  initial={{ opacity: 1, y: 0, scale: 0.8 }}
-                  animate={{ opacity: 0, y: -120, scale: 1.4 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 1.6, ease: "easeOut" }}
-                  className="absolute bottom-16 pointer-events-none z-30"
-                  style={{ left: `${f.x}%` }}
-                >
-                  <f.icon className={`h-7 w-7 ${f.color}`} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
           </motion.div>
 
           <motion.p
