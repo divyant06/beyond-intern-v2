@@ -231,8 +231,8 @@ export default function CourseVideoPage() {
             </button>
           </div>
 
-          {/* Right Controls */}
-          <div className="flex items-center gap-6">
+          {/* Right Controls - Added pr-14 to dodge the chatbot */}
+          <div className="flex items-center gap-6 pr-14">
             <button 
               onClick={changeSpeed} 
               disabled={!playerReady}
@@ -247,6 +247,26 @@ export default function CourseVideoPage() {
           </div>
         </div>
       </div>
+
+      {/* Course outcomes */}
+      {course?.outcomes && (
+        <div className="glass-card rounded-2xl p-6 space-y-3 mt-6">
+          <h2 className="text-sm font-semibold text-white">
+            What you&apos;ll achieve
+          </h2>
+          <ul className="space-y-2">
+            {course.outcomes.map((outcome) => (
+              <li
+                key={outcome}
+                className="flex items-center gap-2.5 text-sm text-slate-400"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-electric-light shrink-0" />
+                {outcome}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </motion.div>
   );
 }
