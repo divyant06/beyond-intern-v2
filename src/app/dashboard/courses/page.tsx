@@ -13,8 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { supabase } from "@/lib/supabase";
 import { courseData } from "@/lib/courses";
+import { getUserCourses } from "./actions";
 
 interface UserCourse {
   course_id: string;
@@ -31,13 +31,9 @@ export default function CoursesPage() {
       if (!session?.user?.email) return;
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from("user_courses")
-          .select("course_id, created_at")
-          .eq("user_email", session.user.email);
-
-        if (error) throw error;
-        setUserCourses(data || []);
+        // Securely fetch using the server action bypass
+        const data = await getUserCourses(session.user.email);
+        setUserCourses(data);
       } catch (err) {
         console.error("Failed to fetch enrolled courses:", err);
         setUserCourses([]);
@@ -53,11 +49,13 @@ export default function CoursesPage() {
     }
   }, [session, status]);
 
+  // BULLETPROOF MAPPING - Prevents React from crashing if a course ID is invalid
   const enrolledCourseDetails = userCourses
-    .map((uc) => ({
-      ...courseData.find((c) => c.id === uc.course_id),
-      enrolledAt: uc.created_at,
-    }))
+    .map((uc) => {
+      const course = courseData.find((c) => c.id === uc.course_id);
+      if (!course) return null; 
+      return { ...course, enrolledAt: uc.created_at };
+    })
     .filter(Boolean);
 
   if (isLoading || status === "loading") {
@@ -107,7 +105,7 @@ export default function CoursesPage() {
       {enrolledCourseDetails.length === 0 ? (
         /* Empty state */
         <div className="glass-card rounded-2xl p-10 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-linear-to-br from-electric/3 via-transparent to-gold/3" />
+          <div className="absolute inset-0 bg-gradient-to-br from-electric/3 via-transparent to-gold/3" />
           <div className="relative">
             <div className="mx-auto mb-5 h-20 w-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
               <Search className="h-10 w-10 text-slate-500" />
@@ -120,7 +118,7 @@ export default function CoursesPage() {
               catalog of 30+ industry-aligned programmes or contact support.
             </p>
             <Link href="/#courses">
-              <Button className="mt-6 gradient-electric text-white font-semibold rounded-full px-8 glow-blue hover:opacity-90 transition-opacity">
+              <Button className="mt-6 bg-blue-600 text-white font-semibold rounded-full px-8 hover:opacity-90 transition-opacity">
                 Explore Courses
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -139,16 +137,16 @@ export default function CoursesPage() {
               className="glass-card rounded-2xl overflow-hidden flex flex-col group"
             >
               {/* Card header gradient */}
-              <div className="h-2 bg-linear-to-r from-electric via-electric-light to-gold" />
+              <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500" />
 
               <div className="flex flex-1 flex-col p-6 gap-4">
                 {/* Category pill */}
-                <span className="self-start text-xs font-medium px-3 py-1 rounded-full bg-electric/10 text-electric-light border border-electric/20">
+                <span className="self-start text-xs font-medium px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                   {course!.category}
                 </span>
 
                 <div className="flex-1">
-                  <h2 className="text-base font-semibold text-white leading-snug group-hover:text-electric-light transition-colors">
+                  <h2 className="text-base font-semibold text-white leading-snug group-hover:text-blue-400 transition-colors">
                     {course!.title}
                   </h2>
                   <p className="mt-1.5 text-sm text-slate-400 line-clamp-2">
@@ -170,7 +168,7 @@ export default function CoursesPage() {
 
                 {/* CTA */}
                 <Link href={`/dashboard/courses/${course!.id}`}>
-                  <Button className="w-full gradient-electric text-white font-semibold rounded-xl glow-blue hover:opacity-90 transition-opacity text-sm">
+                  <Button className="w-full bg-blue-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity text-sm">
                     <Play className="mr-2 h-4 w-4" />
                     Start Learning
                   </Button>
