@@ -12,10 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSession } from "next-auth/react";
-import { supabase } from "@/lib/supabase";
 import { courseData } from "@/lib/courses";
+import { assignCourse } from "./actions";
 
-const ADMIN_EMAILS = ["info@beyondintern.com","ansupoddar11@gmail.com"];
+const ADMIN_EMAILS = ["info@beyondintern.com", "ansupoddar11@gmail.com"];
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -36,30 +36,18 @@ export default function AdminPage() {
     setSubmitStatus("loading");
     setMessage("");
 
-    try {
-      const { error } = await supabase.from("user_courses").insert({
-        user_email: userEmail.trim().toLowerCase(),
-        course_id: selectedCourseId,
-      });
+    // Call our secure Server Action instead of calling Supabase directly
+    const result = await assignCourse(userEmail, selectedCourseId);
 
-      if (error) {
-        if (error.code === "23505") {
-          setMessage("This user is already enrolled in that course.");
-          setSubmitStatus("error");
-        } else {
-          throw error;
-        }
-      } else {
-        setMessage(
-          `Successfully enrolled ${userEmail} in "${courseData.find((c) => c.id === selectedCourseId)?.title}".`
-        );
-        setSubmitStatus("success");
-        setUserEmail("");
-        setSelectedCourseId("");
-      }
-    } catch (err) {
-      console.error("Enrol error:", err);
-      setMessage("An unexpected error occurred. Please try again.");
+    if (result.success) {
+      setMessage(
+        `Successfully enrolled ${userEmail} in "${courseData.find((c) => c.id === selectedCourseId)?.title}".`
+      );
+      setSubmitStatus("success");
+      setUserEmail("");
+      setSelectedCourseId("");
+    } else {
+      setMessage(result.message || "Failed to assign course.");
       setSubmitStatus("error");
     }
   }
