@@ -16,7 +16,6 @@ import {
   LogOut,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import Image from "next/image";
 import { signOut } from "next-auth/react";
 
 const navItems = [
@@ -66,28 +65,30 @@ export function Sidebar() {
     <motion.aside
       animate={{ width: collapsed ? 72 : 256 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="fixed left-0 top-0 bottom-0 z-40 flex flex-col border-r border-white/5 bg-navy-light/95 backdrop-blur-xl"
+      className="sticky top-0 h-screen shrink-0 z-40 flex flex-col border-r border-white/5 bg-navy-light/95 backdrop-blur-xl"
     >
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2 px-4 h-16 overflow-hidden">
-        <div className="shrink-0 flex items-center justify-center h-9 w-9">
-          <Image
-            src="/logo-transparent.png.png"
-            alt="Beyond Intern"
-            width={36}
-            height={36}
-            className="object-contain"
-          />
-        </div>
+      <Link href="/" className={`flex items-center px-4 h-16 overflow-hidden ${collapsed ? "justify-center" : "gap-2"}`}>
         <AnimatePresence>
-          {!collapsed && (
+          {!collapsed ? (
             <motion.span
+              key="full-logo"
               initial={{ opacity: 0, width: 0 }}
               animate={{ opacity: 1, width: "auto" }}
               exit={{ opacity: 0, width: 0 }}
               className="text-lg font-bold text-white whitespace-nowrap overflow-hidden"
             >
               Beyond<span className="gradient-text">Intern</span>
+            </motion.span>
+          ) : (
+            <motion.span
+              key="small-logo"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-lg font-bold text-white whitespace-nowrap"
+            >
+              BI
             </motion.span>
           )}
         </AnimatePresence>
@@ -96,7 +97,7 @@ export function Sidebar() {
       <Separator className="bg-white/5" />
 
       {/* Nav items */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className={`flex-1 flex flex-col px-3 py-4 space-y-1 overflow-y-auto ${collapsed ? "items-center" : ""}`}>
         {navItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
@@ -105,8 +106,10 @@ export function Sidebar() {
           return (
             <Link key={item.label} href={item.href} title={collapsed ? item.tooltip : undefined}>
               <motion.div
-                whileHover={{ x: 2 }}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all cursor-pointer ${
+                whileHover={{ x: collapsed ? 0 : 2 }}
+                className={`flex items-center rounded-xl py-2.5 text-sm font-medium transition-all cursor-pointer ${
+                  collapsed ? "justify-center w-11 px-0" : "gap-3 px-3"
+                } ${
                   isActive
                     ? "bg-electric/10 text-electric-light"
                     : "text-slate-400 hover:bg-white/5 hover:text-white"

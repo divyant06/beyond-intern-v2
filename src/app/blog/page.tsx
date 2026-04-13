@@ -1,106 +1,22 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import type { Metadata } from "next";
 import { ArrowRight, Clock, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: "Blog — Beyond Intern",
-  description:
-    "Career tips, industry insights, internship guides, and success stories from the Beyond Intern community.",
-};
-
-type BlogCategory = "Career" | "Tech" | "Finance" | "Marketing" | "Mindset" | "Success Story";
-
-interface BlogPost {
-  id: string;
+interface DevToArticle {
+  id: number;
   title: string;
-  excerpt: string;
-  category: BlogCategory;
-  readTime: string;
-  date: string;
-  emoji: string;
-  gradient: string;
+  description: string;
+  published_at: string;
+  reading_time_minutes: number;
+  url: string;
+  cover_image: string | null;
+  tag_list: string[];
 }
-
-const CATEGORY_COLORS: Record<BlogCategory, string> = {
-  Career: "bg-electric/20 text-electric-light border-electric/30",
-  Tech: "bg-emerald/20 text-emerald border-emerald/30",
-  Finance: "bg-gold/20 text-gold-light border-gold/30",
-  Marketing: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  Mindset: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  "Success Story": "bg-rose/20 text-rose border-rose/30",
-};
-
-const POSTS: BlogPost[] = [
-  {
-    id: "1",
-    title: "How to Land Your First Tech Internship in 2026",
-    excerpt:
-      "The tech job market has changed. Here's the step-by-step playbook that helped 500+ Beyond Intern students secure their first role — even with no prior experience.",
-    category: "Career",
-    readTime: "6 min read",
-    date: "22 Mar 2026",
-    emoji: "🚀",
-    gradient: "from-blue-600/30 to-cyan-500/20",
-  },
-  {
-    id: "2",
-    title: "Python vs Java in 2026: Which Should You Learn First?",
-    excerpt:
-      "Both are powerful, both are in demand — but for a beginner, the choice matters. We break down salary data, job market trends, and learning curves to help you decide.",
-    category: "Tech",
-    readTime: "8 min read",
-    date: "18 Mar 2026",
-    emoji: "💻",
-    gradient: "from-emerald-600/30 to-teal-500/20",
-  },
-  {
-    id: "3",
-    title: "Understanding UK Stock Markets: A Beginner's Guide",
-    excerpt:
-      "From the FTSE 100 to ISAs and ETFs — this plain-English guide demystifies investing in the UK and shows you how to start growing your wealth from your first paycheck.",
-    category: "Finance",
-    readTime: "10 min read",
-    date: "15 Mar 2026",
-    emoji: "📈",
-    gradient: "from-green-600/30 to-emerald-500/20",
-  },
-  {
-    id: "4",
-    title: "The LinkedIn Profile Formula That Gets You Noticed by Recruiters",
-    excerpt:
-      "A well-optimised LinkedIn profile is the single highest ROI career move you can make in 2026. Here's the exact section-by-section structure our placement team uses.",
-    category: "Career",
-    readTime: "7 min read",
-    date: "10 Mar 2026",
-    emoji: "🔗",
-    gradient: "from-indigo-600/30 to-violet-500/20",
-  },
-  {
-    id: "5",
-    title: "From Graduate to Google: Priya's Beyond Intern Success Story",
-    excerpt:
-      "Priya had no connections, no prior coding experience, and a degree in English Literature. Six months after joining Beyond Intern's Full Stack program, she accepted an offer from Google London.",
-    category: "Success Story",
-    readTime: "5 min read",
-    date: "5 Mar 2026",
-    emoji: "⭐",
-    gradient: "from-rose-600/30 to-fuchsia-500/20",
-  },
-  {
-    id: "6",
-    title: "Digital Marketing in 2026: Trends Every Marketer Must Know",
-    excerpt:
-      "AI content generation, zero-click searches, short-form video dominance — the landscape has shifted dramatically. Here's how to stay ahead and become a sought-after digital marketer.",
-    category: "Marketing",
-    readTime: "9 min read",
-    date: "1 Mar 2026",
-    emoji: "📢",
-    gradient: "from-orange-600/30 to-amber-500/20",
-  },
-];
 
 const ALL_CATEGORIES = [
   "All",
@@ -110,9 +26,44 @@ const ALL_CATEGORIES = [
   "Marketing",
   "Mindset",
   "Success Story",
-] as const;
+];
+
+const categoryTags: Record<string, string> = {
+  All: "programming",
+  Career: "career",
+  Tech: "webdev",
+  Finance: "fintech",
+  Marketing: "marketing",
+  Mindset: "productivity",
+  "Success Story": "success",
+};
 
 export default function BlogPage() {
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [articles, setArticles] = useState<DevToArticle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchArticles() {
+      setIsLoading(true);
+      try {
+        const tag = categoryTags[activeCategory] || "programming";
+        const res = await fetch(
+          `https://dev.to/api/articles?tag=${tag}&per_page=6`
+        );
+        if (!res.ok) throw new Error("Failed to fetch articles");
+        const data = await res.json();
+        setArticles(data);
+      } catch (error) {
+        console.error("Error fetching dev.to posts:", error);
+        setArticles([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchArticles();
+  }, [activeCategory]);
+
   return (
     <>
       <Navbar />
@@ -130,7 +81,8 @@ export default function BlogPage() {
               <span className="gradient-text">Accelerate Your Career</span>
             </h1>
             <p className="mt-5 text-lg text-slate-400 max-w-2xl mx-auto">
-              Career tips, industry insights, and real success stories from the Beyond Intern community.
+              Career tips, industry insights, and real success stories from the
+              Beyond Intern community.
             </p>
           </div>
         </section>
@@ -139,16 +91,17 @@ export default function BlogPage() {
         <div className="relative border-t border-white/5">
           <div className="mx-auto max-w-7xl px-6 py-5 flex flex-wrap items-center gap-2">
             {ALL_CATEGORIES.map((cat) => (
-              <span
+              <button
                 key={cat}
+                onClick={() => setActiveCategory(cat)}
                 className={`text-xs font-medium px-4 py-1.5 rounded-full border cursor-pointer transition-all ${
-                  cat === "All"
+                  activeCategory === cat
                     ? "gradient-electric text-white border-transparent"
                     : "border-white/10 text-slate-400 hover:text-white hover:border-white/20 bg-white/5"
                 }`}
               >
                 {cat}
-              </span>
+              </button>
             ))}
           </div>
         </div>
@@ -156,70 +109,91 @@ export default function BlogPage() {
         {/* ── Post grid ─────────────────────────────────────────────────── */}
         <section className="relative py-12 pb-28">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {POSTS.map((post, i) => (
-                <article
-                  key={post.id}
-                  className="group glass-card rounded-2xl overflow-hidden flex flex-col hover:-translate-y-2 transition-transform duration-300"
-                  style={{ animationDelay: `${i * 80}ms` }}
-                >
-                  {/* Thumbnail */}
+            {isLoading ? (
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
                   <div
-                    className={`relative h-44 bg-linear-to-br ${post.gradient} flex items-center justify-center overflow-hidden`}
-                  >
-                    <div className="absolute inset-0 bg-navy/30" />
-                    <span className="relative z-10 text-6xl opacity-30 group-hover:opacity-50 group-hover:scale-110 transition-all duration-500">
-                      {post.emoji}
-                    </span>
-                    <div className="absolute top-3 left-3 z-10">
-                      <Badge
-                        className={`${CATEGORY_COLORS[post.category]} text-xs`}
-                      >
-                        {post.category}
-                      </Badge>
-                    </div>
-                  </div>
+                    key={i}
+                    className="h-96 rounded-2xl glass-card animate-pulse bg-white/5"
+                  />
+                ))}
+              </div>
+            ) : articles.length === 0 ? (
+              <div className="text-center text-slate-400 py-10">
+                No articles found for &quot;{activeCategory}&quot;.
+              </div>
+            ) : (
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {articles.map((post, i) => {
+                  const fallBackImage =
+                    "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80";
+                  const coverImage = post.cover_image || fallBackImage;
+                  const formattedDate = new Date(
+                    post.published_at
+                  ).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  });
+                  const tag = post.tag_list?.[0] || "Tech";
 
-                  {/* Content */}
-                  <div className="flex flex-1 flex-col p-6">
-                    <h2 className="text-base font-semibold text-white leading-snug group-hover:text-electric-light transition-colors line-clamp-2 mb-3">
-                      {post.title}
-                    </h2>
-                    <p className="text-sm text-slate-400 leading-relaxed line-clamp-3 flex-1">
-                      {post.excerpt}
-                    </p>
-
-                    {/* Meta + CTA */}
-                    <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
-                      <div className="flex items-center gap-3 text-xs text-slate-500">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {post.date}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {post.readTime}
-                        </span>
+                  return (
+                    <Link
+                      href={post.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      key={post.id}
+                      className="group glass-card rounded-2xl overflow-hidden flex flex-col hover:-translate-y-2 transition-transform duration-300"
+                      style={{ animationDelay: `${i * 80}ms` }}
+                    >
+                      {/* Thumbnail */}
+                      <div className="relative h-44 flex items-center justify-center overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={coverImage}
+                          alt={post.title}
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-navy/20 group-hover:bg-transparent transition-colors duration-500" />
+                        <div className="absolute top-3 left-3 z-10">
+                          <Badge className="bg-electric/20 text-electric-light border-electric/30 text-xs capitalize">
+                            {tag}
+                          </Badge>
+                        </div>
                       </div>
-                      <Link
-                        href={`/blog/${post.id}`}
-                        className="flex items-center gap-1 text-xs font-semibold text-electric-light hover:text-white transition-colors"
-                      >
-                        Read More
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
 
-            {/* Load more CTA */}
-            <div className="mt-14 text-center">
-              <button className="px-8 py-3 rounded-full glass border border-white/10 text-slate-300 text-sm font-medium hover:text-white hover:border-white/20 transition-all">
-                Load More Articles
-              </button>
-            </div>
+                      {/* Content */}
+                      <div className="flex flex-1 flex-col p-6">
+                        <h2 className="text-base font-semibold text-white leading-snug group-hover:text-electric-light transition-colors line-clamp-2 mb-3">
+                          {post.title}
+                        </h2>
+                        <p className="text-sm text-slate-400 leading-relaxed line-clamp-3 flex-1">
+                          {post.description}
+                        </p>
+
+                        {/* Meta + CTA */}
+                        <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
+                          <div className="flex items-center gap-3 text-xs text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {formattedDate}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {post.reading_time_minutes} min read
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs font-semibold text-electric-light group-hover:text-white transition-colors">
+                            Read More
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
       </main>

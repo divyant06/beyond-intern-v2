@@ -24,20 +24,36 @@ const navLinks = [
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      setScrolled(currentScrollY > 20);
+
+      // Hide only if scrolled down significantly, show if scrolling up
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setHidden(true);
+      } else {
+        setHidden(false);
+      }
+      
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        hidden ? "-translate-y-full" : "translate-y-0"
+      } ${
         scrolled ? "glass-nav shadow-lg" : "bg-transparent"
       }`}
     >
@@ -47,8 +63,8 @@ export function Navbar() {
           <Image
             src="/logo-transparent.png.png"
             alt="Beyond Intern Logo"
-            width={150}
-            height={40}
+            width={225}
+            height={60}
             className="object-contain"
             priority
           />
@@ -111,16 +127,8 @@ export function Navbar() {
             /* Logged out: show Login / Get Started */
             <>
               <Link href="/login">
-                <Button
-                  variant="ghost"
-                  className="text-slate-300 hover:text-white hover:bg-white/5"
-                >
-                  Login
-                </Button>
-              </Link>
-              <Link href="/login">
                 <Button className="gradient-electric text-white font-semibold rounded-full px-6 glow-blue hover:opacity-90 transition-opacity">
-                  Get Started
+                  Login
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </Link>
@@ -152,8 +160,8 @@ export function Navbar() {
                 <Image
                   src="/logo-transparent.png.png"
                   alt="Beyond Intern Logo"
-                  width={130}
-                  height={35}
+                  width={195}
+                  height={52}
                   className="object-contain"
                 />
               </Link>
@@ -221,16 +229,8 @@ export function Navbar() {
                 ) : (
                   <>
                     <Link href="/login">
-                      <Button
-                        variant="outline"
-                        className="w-full border-white/20 text-white hover:bg-white/5"
-                      >
-                        Login
-                      </Button>
-                    </Link>
-                    <Link href="/login">
                       <Button className="w-full gradient-electric text-white font-semibold rounded-full glow-blue">
-                        Get Started
+                        Login
                       </Button>
                     </Link>
                   </>

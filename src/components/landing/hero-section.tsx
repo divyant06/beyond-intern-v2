@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import type { Easing } from "framer-motion";
 import { ArrowRight, Play, Users, BookOpen, Award, Star } from "lucide-react";
@@ -9,23 +10,24 @@ import { ClientOnly } from "@/components/shared/client-only";
 
 const stats = [
   { icon: Users, value: "10,000+", label: "Active Students" },
-  { icon: BookOpen, value: "28", label: "Expert Courses" },
+  { icon: BookOpen, value: "30+", label: "Expert Courses" },
   { icon: Award, value: "95%", label: "Placement Rate" },
-  { icon: Star, value: "4.9/5", label: "Avg. Rating" },
+  { icon: Star, value: "4.5/5", label: "Avg. Rating" },
 ];
 
 // Companies to orbit
 const COMPANIES = [
-  "APPLE",
-  "SAMSUNG",
-  "AMAZON AWS",
-  "TESLA",
+  "Google",
+  "Amazon AWS",
+  "Microsoft",
+  "Tesla",
   "IBM",
-  "MICROSOFT",
-  "NESTLÉ",
-  "MERCEDES",
-  "MORRISONS",
-  "GARRISONS",
+  "Samsung",
+  "Nestlé",
+  "Apple",
+  "Garrisons",
+  "Mercedes",
+  "Morrisons",
 ];
 
 const container = {
@@ -108,7 +110,7 @@ function OrbitalRing({
             transition={{ duration, repeat: Infinity, ease: "linear" }}
           >
             <div
-              className={`glass px-2.5 py-1 rounded-full border border-white/10 text-[10px] font-semibold tracking-widest whitespace-nowrap cursor-default transition-all hover:scale-110 ${labelClass}`}
+              className={`glass px-2.5 py-1 rounded-full border border-white/10 text-[10px] font-semibold tracking-widest whitespace-nowrap cursor-default text-slate-400 transition-all duration-300 hover:scale-110 hover:text-white hover:border-electric/50 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] ${labelClass}`}
             >
               {company}
             </div>
@@ -135,9 +137,6 @@ function OrbitalFallback() {
         <div className="text-3xl font-black gradient-text tracking-tight">
           BI
         </div>
-        <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">
-          Premium
-        </p>
       </div>
     </div>
   );
@@ -221,7 +220,7 @@ export function HeroSection() {
               {stats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="glass rounded-xl p-3 text-center border border-white/5"
+                  className="rounded-xl p-4 text-center border border-white/20 bg-black/60 backdrop-blur-xl shadow-2xl"
                 >
                   <stat.icon className="mx-auto mb-1.5 h-4 w-4 text-electric-light" />
                   <p className="text-lg font-bold text-white">{stat.value}</p>
@@ -294,9 +293,6 @@ export function HeroSection() {
                     >
                       BI
                     </div>
-                    <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">
-                      Premium
-                    </p>
                   </motion.div>
                 </div>
 
@@ -318,7 +314,7 @@ export function HeroSection() {
                       ease: "easeInOut",
                     }}
                   >
-                    <div className="glass-card rounded-xl p-3 text-center min-w-[110px] hover:scale-105 transition-transform cursor-default">
+                    <div className="rounded-xl p-3 text-center min-w-[110px] hover:scale-105 transition-transform cursor-default border border-white/20 bg-black/60 backdrop-blur-xl shadow-2xl">
                       <stat.icon className="mx-auto mb-1 h-4 w-4 text-electric-light" />
                       <p className="text-base font-bold text-white">
                         {stat.value}

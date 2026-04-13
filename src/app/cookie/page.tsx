@@ -24,22 +24,9 @@ export default function CookiePage() {
             <h1 className="text-4xl sm:text-5xl font-bold text-white">
               Cookie <span className="gradient-text">Policy</span>
             </h1>
-            <p className="mt-6 text-lg text-slate-400 max-w-xl mx-auto">
-              We use cookies to improve your browsing experience. Our detailed
-              cookie policy is currently being finalised.
+            <p className="mt-6 text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. By clicking &apos;Accept All&apos;, you consent to our use of cookies. Essential cookies are always enabled to ensure site functionality. You can manage your preferences at any time.
             </p>
-            <div className="mt-10 glass-card rounded-2xl p-8 max-w-md mx-auto">
-              <p className="text-sm text-slate-300 leading-relaxed">
-                Updated policies coming soon. For any enquiries, please contact
-                us at{" "}
-                <a
-                  href="mailto:info@beyondintern.com"
-                  className="text-electric-light hover:underline"
-                >
-                  info@beyondintern.com
-                </a>
-              </p>
-            </div>
           </div>
         </section>
       </main>

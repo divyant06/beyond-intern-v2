@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
+
 interface Review {
   id: string;
   name: string;
@@ -27,7 +28,7 @@ const reviews: Review[] = [
     rating: 5,
     text: "Beyond Intern completely transformed my understanding of full-stack development. The hands-on projects were incredibly practical and the mentorship quality is unmatched. Landed my first dev role within 2 months!",
     date: "2 weeks ago",
-    avatar: "CW",
+    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
   },
   {
     id: "2",
@@ -37,7 +38,7 @@ const reviews: Review[] = [
     rating: 5,
     text: "The Data Science course is genuinely world-class. Professor Williams explains complex ML concepts in such an accessible way. The community support and career resources made all the difference.",
     date: "1 month ago",
-    avatar: "RP",
+    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
   },
   {
     id: "3",
@@ -47,7 +48,7 @@ const reviews: Review[] = [
     rating: 5,
     text: "As someone transitioning from graphic design to UX, this platform was a godsend. The design course by Lisa Nakamura is pure gold. My portfolio went from basic to interview-ready.",
     date: "3 weeks ago",
-    avatar: "ET",
+    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
   },
   {
     id: "4",
@@ -57,7 +58,7 @@ const reviews: Review[] = [
     rating: 4,
     text: "The AWS certification prep was outstanding. Alex Rivera's real-world examples make abstract cloud concepts click immediately. Highly recommend for anyone eyeing a cloud career.",
     date: "1 month ago",
-    avatar: "OH",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
   },
   {
     id: "5",
@@ -67,7 +68,7 @@ const reviews: Review[] = [
     rating: 5,
     text: "The PM bootcamp exceeded every expectation. The frameworks taught here are the same ones used at top tech companies. The live webinars are an amazing bonus for staying current.",
     date: "2 months ago",
-    avatar: "SM",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
   },
   {
     id: "6",
@@ -77,7 +78,7 @@ const reviews: Review[] = [
     rating: 5,
     text: "Went from a complete career changer to a confident developer in under 6 months. The structured learning path, weekly webinars, and amazing community made the journey enjoyable.",
     date: "3 months ago",
-    avatar: "JO",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
   },
 ];
 
@@ -114,9 +115,12 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
 
       {/* Author */}
       <div className="mt-5 flex items-center gap-3 pt-4 border-t border-white/5">
-        <div className="h-10 w-10 rounded-full gradient-electric flex items-center justify-center text-sm font-bold text-white">
-          {review.avatar}
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={review.avatar}
+          alt={review.name}
+          className="h-10 w-10 rounded-full object-cover"
+        />
         <div>
           <p className="text-sm font-semibold text-white">{review.name}</p>
           <p className="text-xs text-slate-500">

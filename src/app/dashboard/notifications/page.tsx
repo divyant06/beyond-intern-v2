@@ -2,16 +2,34 @@
 
 import { motion } from "framer-motion";
 import { Bell, Rocket, Sparkles, BookOpen, Info } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+
+function getRelativeTime(date: Date | string) {
+  const now = new Date();
+  const past = new Date(date);
+  const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return "Just now";
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays}d ago`;
+}
+
+const now = Date.now();
 
 const notifications = [
   {
     id: "welcome",
     icon: Rocket,
-    title: "Welcome to Beyond Intern! 🚀",
+    title: "Welcome to Beyond Intern!",
     message:
       "Explore our courses to start your journey. We have 28 industry-aligned programmes across 7 skill tracks.",
-    time: "Just now",
+    createdAt: new Date(now - 1000 * 30).toISOString(),
     color: "bg-electric",
     unread: true,
   },
@@ -21,7 +39,7 @@ const notifications = [
     title: "Quick Tip",
     message:
       "Complete your profile in Settings to unlock personalised course recommendations.",
-    time: "1 minute ago",
+    createdAt: new Date(now - 1000 * 60 * 5).toISOString(),
     color: "bg-gold",
     unread: true,
   },
@@ -31,7 +49,7 @@ const notifications = [
     title: "Start Learning Today",
     message:
       "Browse our top-rated courses in Technical Skills, Creative Skills, and Career Readiness.",
-    time: "5 minutes ago",
+    createdAt: new Date(now - 1000 * 60 * 60 * 2).toISOString(),
     color: "bg-emerald",
     unread: false,
   },
@@ -41,7 +59,7 @@ const notifications = [
     title: "Join the Community",
     message:
       "Connect with 10,000+ students and alumni. Lifetime access included with every course.",
-    time: "10 minutes ago",
+    createdAt: new Date(now - 1000 * 60 * 60 * 24 * 3).toISOString(),
     color: "bg-purple-500",
     unread: false,
   },
@@ -59,9 +77,6 @@ export default function NotificationsPage() {
           <Bell className="h-6 w-6 text-electric-light" />
           Notifications
         </h1>
-        <Badge className="bg-electric/10 text-electric-light border-electric/20 text-xs">
-          {notifications.filter((n) => n.unread).length} new
-        </Badge>
       </div>
 
       <div className="glass-card rounded-2xl overflow-hidden divide-y divide-white/5">
@@ -83,14 +98,11 @@ export default function NotificationsPage() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-semibold text-white">{notif.title}</p>
-                {notif.unread && (
-                  <span className="h-2 w-2 rounded-full bg-electric shrink-0" />
-                )}
               </div>
               <p className="text-sm text-slate-400 mt-1 leading-relaxed">
                 {notif.message}
               </p>
-              <p className="text-[11px] text-slate-600 mt-2">{notif.time}</p>
+              <p className="text-[11px] text-slate-600 mt-2">{getRelativeTime(notif.createdAt)}</p>
             </div>
           </motion.div>
         ))}

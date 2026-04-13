@@ -54,8 +54,7 @@ export function TopHeader() {
 
         {/* User dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger>
-            <button className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-white/5 transition-colors">
+          <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-white/5 transition-colors focus:outline-none">
               {user?.image ? (
                 <Image
                   src={user.image}
@@ -78,7 +77,6 @@ export function TopHeader() {
                 </p>
               </div>
               <ChevronDown className="h-4 w-4 text-slate-500" />
-            </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"

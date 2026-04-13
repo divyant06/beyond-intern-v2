@@ -18,43 +18,43 @@ const categoryConfig: Record<
     icon: "💻",
     gradient: "from-blue-600/30 to-cyan-500/20",
     color: "text-blue-400",
-    image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&h=400&fit=crop",
+    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80",
   },
   "Analytical Skills": {
     icon: "📊",
     gradient: "from-emerald-600/30 to-teal-500/20",
     color: "text-emerald-400",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop",
+    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80",
   },
   "Marketing & Sales": {
     icon: "📢",
     gradient: "from-orange-600/30 to-amber-500/20",
     color: "text-amber-400",
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop",
+    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
   },
   "Professional & Soft Skills": {
     icon: "🧠",
     gradient: "from-purple-600/30 to-pink-500/20",
     color: "text-purple-400",
-    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop",
+    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80",
   },
   "Finance & Investment": {
     icon: "📈",
     gradient: "from-green-600/30 to-emerald-500/20",
     color: "text-green-400",
-    image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&h=400&fit=crop",
+    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
   },
   "Creative Skills": {
     icon: "🎨",
     gradient: "from-rose-600/30 to-fuchsia-500/20",
     color: "text-rose-400",
-    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop",
+    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
   },
   "Career Readiness": {
     icon: "🚀",
     gradient: "from-indigo-600/30 to-violet-500/20",
     color: "text-indigo-400",
-    image: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=600&h=400&fit=crop",
+    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
   },
 };
 
@@ -103,19 +103,6 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
           <Badge className="bg-white/10 text-white border-white/20 text-xs backdrop-blur-sm">
             {course.category}
           </Badge>
-        </div>
-
-        {/* Price badge top-right */}
-        <div className="absolute top-3 right-3 z-10">
-          {course.price === null ? (
-            <Badge className="bg-emerald/20 text-emerald border-emerald/30 text-xs font-semibold">
-              Complimentary
-            </Badge>
-          ) : (
-            <Badge className="bg-electric/20 text-electric-light border-electric/30 text-xs font-bold">
-              £{course.price}
-            </Badge>
-          )}
         </div>
       </div>
 
@@ -213,15 +200,11 @@ export function CourseGrid() {
           viewport={{ once: true }}
           className="text-center mb-10"
         >
-          <Badge className="bg-gold/10 text-gold-light border-gold/20 mb-4">
-            Full Skill Catalog
-          </Badge>
-          <h2 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+          <h2 className="text-3xl font-bold text-white sm:text-4xl lg:text-5xl mb-4">
             Learn from the <span className="gradient-text">Best in Industry</span>
           </h2>
           <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
-            28 industry-aligned courses across 7 skill tracks. All priced in GBP
-            with lifetime access and a certificate of completion.
+            30+ industry-aligned courses across 7 skill tracks. All priced with lifetime access and a certificate of completion.
           </p>
         </motion.div>
 

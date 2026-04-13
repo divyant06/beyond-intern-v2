@@ -147,8 +147,24 @@ export function WebinarSection() {
               <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
                 Upcoming Schedule
               </h4>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="mb-4"
+              >
+                <Link href="/webinar/live">
+                  <Button className="w-full gradient-electric text-white text-xs font-bold rounded-xl glow-blue hover:opacity-90 transition-opacity flex items-center justify-center gap-2 py-3 h-auto">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                    </span>
+                    Enter Live Room
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </motion.div>
               {[
-                { date: "29 Mar", title: "Career & Internships", status: "live" },
                 { date: "12 Apr", title: "Breaking into Tech 2026", status: "upcoming" },
                 { date: "26 Apr", title: "System Design Masterclass", status: "upcoming" },
               ].map((w) => (
@@ -163,36 +179,10 @@ export function WebinarSection() {
                       </div>
                       <p className="text-xs text-slate-300">{w.title}</p>
                     </div>
-                    <Badge
-                      className={
-                        w.status === "live"
-                          ? "bg-rose/20 text-rose border-rose/30 text-[10px]"
-                          : "bg-electric/10 text-electric-light border-electric/20 text-[10px]"
-                      }
-                    >
-                      {w.status === "live" ? "🔴 Live" : "📅 Soon"}
+                    <Badge className="bg-electric/10 text-electric-light border-electric/20 text-[10px]">
+                      📅 Soon
                     </Badge>
                   </div>
-
-                  {/* ── The Door — Enter Live Room button ── */}
-                  {w.status === "live" && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.3 }}
-                    >
-                      <Link href="/webinar/live">
-                        <Button className="w-full mt-1 gradient-electric text-white text-xs font-bold rounded-xl glow-blue hover:opacity-90 transition-opacity flex items-center justify-center gap-2 py-2 h-auto">
-                          <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-                          </span>
-                          Enter Live Room
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </Button>
-                      </Link>
-                    </motion.div>
-                  )}
                 </div>
               ))}
             </div>
@@ -215,7 +205,7 @@ export function WebinarSection() {
                     Register for Free
                   </h3>
                   <p className="text-xs text-slate-400">
-                    Secure your spot in minutes — no credit card required.
+                    Secure your spot in minutes.
                   </p>
                 </div>
 
@@ -353,8 +343,7 @@ export function WebinarSection() {
                       className="mt-0.5 h-4 w-4 accent-blue-500 cursor-pointer"
                     />
                     <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
-                      I confirm that I will attend the webinar on{" "}
-                      <span className="text-white font-medium">29th March</span>. *
+                      I confirm that I will attend the webinar. *
                     </span>
                   </label>
                   <label className="flex items-start gap-3 cursor-pointer group">

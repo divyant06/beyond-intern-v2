@@ -85,8 +85,8 @@ export default function LoginPage() {
               <Image
                 src="/logo-transparent.png.png"
                 alt="Beyond Intern Logo"
-                width={150}
-                height={40}
+                width={187}
+                height={50}
                 className="object-contain"
                 priority
               />
@@ -143,7 +143,7 @@ export default function LoginPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
-                    className="h-12 pl-11 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 rounded-xl"
+                    className="h-12 pl-11 bg-white/5 border-white/10 text-white placeholder:text-white/70 focus:border-electric/50 rounded-xl"
                   />
                 </motion.div>
               )}
@@ -157,7 +157,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 pl-11 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 rounded-xl"
+                className="h-12 pl-11 bg-white/5 border-white/10 text-white placeholder:text-white/70 focus:border-electric/50 rounded-xl"
               />
             </div>
 
@@ -169,7 +169,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="h-12 pl-11 pr-11 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 rounded-xl"
+                className="h-12 pl-11 pr-11 bg-white/5 border-white/10 text-white placeholder:text-white/70 focus:border-electric/50 rounded-xl"
               />
               <button
                 type="button"
@@ -195,7 +195,7 @@ export default function LoginPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="h-12 pl-11 pr-11 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 rounded-xl"
+                    className="h-12 pl-11 pr-11 bg-white/5 border-white/10 text-white placeholder:text-white/70 focus:border-electric/50 rounded-xl"
                   />
                 </motion.div>
               )}
