@@ -15,7 +15,7 @@ import { useSession } from "next-auth/react";
 import { supabase } from "@/lib/supabase";
 import { courseData } from "@/lib/courses";
 
-const ADMIN_EMAILS = ["admin@beyondintern.com", "divyant@beyondintern.com"];
+const ADMIN_EMAILS = ["info@beyondintern.com","ansupoddar11@gmail.com"];
 
 type Status = "idle" | "loading" | "success" | "error";
 

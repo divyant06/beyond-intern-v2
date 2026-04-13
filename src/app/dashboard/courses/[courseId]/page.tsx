@@ -1,53 +1,35 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
+  ArrowLeft,
   Play,
   Pause,
   Volume2,
   VolumeX,
-  ArrowLeft,
-  Lock,
+  Rewind,
+  FastForward,
+  Maximize,
 } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { courseData } from "@/lib/courses";
 
-interface YTPlayer {
-  playVideo: () => void;
-  pauseVideo: () => void;
-  mute: () => void;
-  unMute: () => void;
-  getDuration: () => number;
-  getCurrentTime: () => number;
-}
-
-interface YTStateChangeEvent {
-  data: number;
-}
-
-interface YTNamespace {
-  Player: new (element: HTMLElement | string, options: unknown) => YTPlayer;
-  PlayerState: {
-    PLAYING: number;
-  };
-}
+// Placeholder video IDs per course (Remove when connected to Supabase)
+const COURSE_VIDEOS: Record<string, string> = {
+  "tech-01": "rfscVS0vtbw", 
+  "mkt-01": "dQw4w9WgXcQ", // Never gonna give you up...
+  default: "dQw4w9WgXcQ", 
+};
 
 declare global {
   interface Window {
-    YT: YTNamespace;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    YT: any;
     onYouTubeIframeAPIReady: () => void;
   }
 }
-
-// Placeholder video IDs per course — add real ones as content is uploaded
-const COURSE_VIDEOS: Record<string, string> = {
-  "tech-01": "rfscVS0vtbw", // Python intro
-  "tech-02": "ysEN5RaKOlA", // Web dev intro
-  "tech-03": "ua-CiDNNj30", // ML intro
-  default: "dQw4w9WgXcQ",   // Generic placeholder
-};
 
 export default function CourseVideoPage() {
   const params = useParams();
@@ -55,12 +37,16 @@ export default function CourseVideoPage() {
   const course = courseData.find((c) => c.id === courseId);
   const videoId = COURSE_VIDEOS[courseId] || COURSE_VIDEOS.default;
 
-  const playerRef = useRef<YTPlayer | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const playerWrapperRef = useRef<HTMLDivElement>(null);
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
   const initPlayer = useCallback(() => {
@@ -68,16 +54,17 @@ export default function CourseVideoPage() {
     playerRef.current = new window.YT.Player(containerRef.current, {
       videoId,
       playerVars: {
-        controls: 0,        // hide native controls
-        disablekb: 1,       // disable keyboard shortcuts
+        controls: 0,        // Hide native controls
+        disablekb: 1,       // Disable YouTube keyboard shortcuts
         rel: 0,
         modestbranding: 1,
-        fs: 0,
+        fs: 0,              // We handle fullscreen manually
         iv_load_policy: 3,
       },
       events: {
         onReady: () => setPlayerReady(true),
-        onStateChange: (event: YTStateChangeEvent) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onStateChange: (event: any) => {
           setIsPlaying(event.data === window.YT.PlayerState.PLAYING);
         },
       },
@@ -113,13 +100,11 @@ export default function CourseVideoPage() {
     };
   }, [isPlaying]);
 
+  // --- NEW PLAYER CONTROLS LOGIC ---
+
   function togglePlay() {
     if (!playerRef.current || !playerReady) return;
-    if (isPlaying) {
-      playerRef.current.pauseVideo();
-    } else {
-      playerRef.current.playVideo();
-    }
+    isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo();
   }
 
   function toggleMute() {
@@ -130,6 +115,39 @@ export default function CourseVideoPage() {
     } else {
       playerRef.current.mute();
       setIsMuted(true);
+    }
+  }
+
+  function skip(seconds: number) {
+    if (!playerRef.current || !playerReady) return;
+    const currentTime = playerRef.current.getCurrentTime();
+    playerRef.current.seekTo(currentTime + seconds, true);
+  }
+
+  function changeSpeed() {
+    if (!playerRef.current || !playerReady) return;
+    // Cycle speeds: 1x -> 1.25x -> 1.5x -> 2x -> 1x
+    const nextSpeed = playbackRate === 1 ? 1.25 : playbackRate === 1.25 ? 1.5 : playbackRate === 1.5 ? 2 : 1;
+    playerRef.current.setPlaybackRate(nextSpeed);
+    setPlaybackRate(nextSpeed);
+  }
+
+  function handleTimelineClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (!playerRef.current || !playerReady) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const percentage = x / rect.width;
+    const duration = playerRef.current.getDuration();
+    playerRef.current.seekTo(duration * percentage, true);
+    setProgress(percentage * 100);
+  }
+
+  function toggleFullScreen() {
+    if (!playerWrapperRef.current) return;
+    if (!document.fullscreenElement) {
+      playerWrapperRef.current.requestFullscreen().catch(err => console.error(err));
+    } else {
+      document.exitFullscreen();
     }
   }
 
@@ -160,85 +178,75 @@ export default function CourseVideoPage() {
         )}
       </div>
 
-      {/* Player container */}
-      <div className="glass-card rounded-2xl overflow-hidden">
-        {/* YouTube embed target */}
-        <div className="relative w-full aspect-video bg-black">
+      {/* Premium Player Container (Wrapped for Fullscreen) */}
+      <div ref={playerWrapperRef} className="glass-card rounded-2xl flex flex-col overflow-hidden bg-[#0A1628] border border-white/10 shadow-2xl">
+        
+        {/* YouTube Embed Area */}
+        <div className="relative w-full aspect-video bg-black group">
           <div ref={containerRef} className="absolute inset-0 w-full h-full" />
 
-          {/* Overlay to block right-click / native controls interaction */}
-          <div className="absolute inset-0 z-10" onContextMenu={(e) => e.preventDefault()} />
-
-          {/* Anti-skip lock badge */}
-          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-white/10 text-xs text-slate-300 backdrop-blur-sm">
-            <Lock className="h-3 w-3 text-electric-light" />
-            Linear Watch Mode
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="w-full h-1 bg-white/10">
-          <motion.div
-            className="h-full bg-linear-to-r from-electric to-electric-light"
-            style={{ width: `${progress}%` }}
-            transition={{ duration: 0.5 }}
+          {/* Clickable Glass Shield */}
+          <div 
+            className="absolute inset-0 z-10 cursor-pointer" 
+            onClick={togglePlay}
+            onContextMenu={(e) => e.preventDefault()} 
           />
         </div>
 
-        {/* Custom controls */}
-        <div className="flex items-center gap-4 px-6 py-4 bg-navy-light/80">
-          <button
-            onClick={togglePlay}
-            disabled={!playerReady}
-            className="h-10 w-10 rounded-full gradient-electric flex items-center justify-center glow-blue hover:opacity-90 transition-opacity disabled:opacity-50"
-            aria-label={isPlaying ? "Pause" : "Play"}
-          >
-            {isPlaying ? (
-              <Pause className="h-5 w-5 text-white" />
-            ) : (
-              <Play className="h-5 w-5 text-white ml-0.5" />
-            )}
-          </button>
+        {/* Clickable Progress Bar */}
+        <div 
+          className="w-full h-2 bg-white/10 cursor-pointer relative group transition-all hover:h-3"
+          onClick={handleTimelineClick}
+        >
+          <motion.div
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#3B82F6] to-[#60A5FA]"
+            style={{ width: `${progress}%` }}
+            transition={{ duration: 0.1 }}
+          />
+        </div>
 
-          <button
-            onClick={toggleMute}
-            disabled={!playerReady}
-            className="h-9 w-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors disabled:opacity-50"
-            aria-label={isMuted ? "Unmute" : "Mute"}
-          >
-            {isMuted ? (
-              <VolumeX className="h-4 w-4 text-slate-300" />
-            ) : (
-              <Volume2 className="h-4 w-4 text-slate-300" />
-            )}
-          </button>
+        {/* Custom Control Bar */}
+        <div className="flex items-center justify-between px-6 py-4 bg-[#0A1628]">
+          
+          {/* Left Controls */}
+          <div className="flex items-center gap-6">
+            <button
+              onClick={togglePlay}
+              disabled={!playerReady}
+              className="text-white hover:text-[#60A5FA] transition-colors disabled:opacity-50"
+            >
+              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+            </button>
 
-          <div className="flex-1 text-xs text-slate-400 flex items-center gap-2">
-            <Lock className="h-3 w-3 text-electric-light" />
-            <span>Seeking disabled — watch linearly to unlock the next lesson.</span>
+            <button onClick={() => skip(-10)} disabled={!playerReady} className="text-slate-400 hover:text-white transition-colors">
+              <Rewind className="h-5 w-5" />
+            </button>
+            
+            <button onClick={() => skip(10)} disabled={!playerReady} className="text-slate-400 hover:text-white transition-colors">
+              <FastForward className="h-5 w-5" />
+            </button>
+
+            <button onClick={toggleMute} disabled={!playerReady} className="text-slate-400 hover:text-white transition-colors">
+              {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </button>
+          </div>
+
+          {/* Right Controls */}
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={changeSpeed} 
+              disabled={!playerReady}
+              className="text-xs font-bold text-slate-300 hover:text-white bg-white/10 px-2.5 py-1.5 rounded-md hover:bg-white/20 transition-all"
+            >
+              {playbackRate}x
+            </button>
+
+            <button onClick={toggleFullScreen} className="text-slate-400 hover:text-white transition-colors">
+              <Maximize className="h-5 w-5" />
+            </button>
           </div>
         </div>
       </div>
-
-      {/* Course outcomes */}
-      {course?.outcomes && (
-        <div className="glass-card rounded-2xl p-6 space-y-3">
-          <h2 className="text-sm font-semibold text-white">
-            What you&apos;ll achieve
-          </h2>
-          <ul className="space-y-2">
-            {course.outcomes.map((outcome) => (
-              <li
-                key={outcome}
-                className="flex items-center gap-2.5 text-sm text-slate-400"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-electric-light shrink-0" />
-                {outcome}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </motion.div>
   );
 }
