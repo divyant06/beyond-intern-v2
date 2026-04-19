@@ -105,7 +105,7 @@ export default function CoursesPage() {
       {enrolledCourseDetails.length === 0 ? (
         /* Empty state */
         <div className="glass-card rounded-2xl p-10 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-electric/3 via-transparent to-gold/3" />
+          <div className="absolute inset-0 bg-linear-to-br from-electric/3 via-transparent to-gold/3" />
           <div className="relative">
             <div className="mx-auto mb-5 h-20 w-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
               <Search className="h-10 w-10 text-slate-500" />
@@ -137,7 +137,7 @@ export default function CoursesPage() {
               className="glass-card rounded-2xl overflow-hidden flex flex-col group"
             >
               {/* Card header gradient */}
-              <div className="h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-amber-500" />
+              <div className="h-2 bg-linear-to-r from-blue-500 via-purple-500 to-amber-500" />
 
               <div className="flex flex-1 flex-col p-6 gap-4">
                 {/* Category pill */}

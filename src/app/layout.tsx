@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { ChatBubble } from "@/components/chatbot/chatbot";
+import { FloatingWhatsApp } from "@/components/FloatingWhatsApp";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
@@ -66,6 +67,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <Providers>
           {children}
+          <FloatingWhatsApp />
           <ChatBubble />
           <Toaster />
         </Providers>
