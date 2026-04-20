@@ -1,60 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, ArrowRight, BookOpen, Filter, ChevronDown } from "lucide-react";
+import { Clock, ArrowRight, BookOpen, Filter, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
-import { courseData, type Course } from "@/lib/courses";
+import { createClient } from "@supabase/supabase-js";
+
+// ── Supabase client (public anon key — read-only) ──────────────────────────────
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// ── DB course shape ────────────────────────────────────────────────────────────
+interface DbCourse {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  duration: string;
+  level: string;
+  outcomes: string;
+  image_url?: string | null;
+  curriculum?: string | null;
+  created_at?: string;
+}
 
 // ── Category config ────────────────────────────────────────────────────────────
 const categoryConfig: Record<
   string,
-  { icon: string; gradient: string; color: string; image: string }
+  { icon: string; gradient: string; color: string; fallbackImage: string }
 > = {
   "Technical Skills": {
     icon: "💻",
     gradient: "from-blue-600/30 to-cyan-500/20",
     color: "text-blue-400",
-    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80",
+    fallbackImage: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80",
   },
   "Analytical Skills": {
     icon: "📊",
     gradient: "from-emerald-600/30 to-teal-500/20",
     color: "text-emerald-400",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80",
+    fallbackImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=80",
   },
   "Marketing & Sales": {
     icon: "📢",
     gradient: "from-orange-600/30 to-amber-500/20",
     color: "text-amber-400",
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
+    fallbackImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
   },
   "Professional & Soft Skills": {
     icon: "🧠",
     gradient: "from-purple-600/30 to-pink-500/20",
     color: "text-purple-400",
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80",
+    fallbackImage: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=600&q=80",
   },
   "Finance & Investment": {
     icon: "📈",
     gradient: "from-green-600/30 to-emerald-500/20",
     color: "text-green-400",
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
+    fallbackImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
   },
   "Creative Skills": {
     icon: "🎨",
     gradient: "from-rose-600/30 to-fuchsia-500/20",
     color: "text-rose-400",
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
+    fallbackImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
   },
   "Career Readiness": {
     icon: "🚀",
     gradient: "from-indigo-600/30 to-violet-500/20",
     color: "text-indigo-400",
-    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
+    fallbackImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80",
   },
 };
 
@@ -70,8 +90,10 @@ const ALL_CATEGORIES = [
 ] as const;
 
 // ── Card ───────────────────────────────────────────────────────────────────────
-function CourseCard({ course, index }: { course: Course; index: number }) {
+function CourseCard({ course, index }: { course: DbCourse; index: number }) {
   const config = categoryConfig[course.category] ?? categoryConfig["Technical Skills"];
+  const imageUrl = course.image_url || config.fallbackImage;
+  const outcomesList = course.outcomes ? course.outcomes.split("\n").filter(Boolean) : [];
 
   return (
     <motion.div
@@ -87,7 +109,7 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
         className={`relative h-44 bg-linear-to-br ${config.gradient} flex items-center justify-center overflow-hidden`}
       >
         <Image
-          src={config.image}
+          src={imageUrl}
           alt={course.title}
           fill
           className="object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700"
@@ -129,13 +151,13 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
           </span>
           <span className="flex items-center gap-1">
             <BookOpen className="h-3.5 w-3.5" />
-            {course.weeklyCommitment}/wk
+            {course.level}
           </span>
         </div>
 
         {/* Career outcomes */}
         <div className="mt-3 flex flex-wrap gap-1">
-          {course.outcomes.slice(0, 2).map((outcome) => (
+          {outcomesList.slice(0, 2).map((outcome) => (
             <span
               key={outcome}
               className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-slate-400 border border-white/8"
@@ -145,23 +167,14 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
           ))}
         </div>
 
-        {/* Price & CTA */}
-        <div className="mt-auto pt-4 flex items-center justify-between border-t border-white/5">
-          <div>
-            {course.price === null ? (
-              <span className="text-sm font-semibold text-emerald">
-                Included Free
-              </span>
-            ) : (
-              <span className="text-xl font-bold text-white">£{course.price}</span>
-            )}
-          </div>
+        {/* CTA */}
+        <div className="mt-auto pt-4 flex items-center justify-end border-t border-white/5">
           <Link href={`/dashboard/courses/${course.id}`}>
             <Button
               size="sm"
               className="gradient-electric text-white rounded-full px-5 text-xs font-semibold hover:opacity-90 transition-opacity"
             >
-              {course.price === null ? "Learn More" : "Enroll Now"}
+              Enroll Now
               <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Button>
           </Link>
@@ -173,19 +186,33 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
 
 // ── Main Section ───────────────────────────────────────────────────────────────
 export function CourseGrid() {
+  const [courses, setCourses] = useState<DbCourse[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [showAll, setShowAll] = useState(false);
 
+  // Fetch courses from Supabase
+  useEffect(() => {
+    async function load() {
+      const { data, error } = await supabase
+        .from("raw_courses")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (!error && data) setCourses(data);
+      setLoading(false);
+    }
+    load();
+  }, []);
+
   const filtered =
     activeFilter === "All"
-      ? courseData
-      : courseData.filter((c) => c.category === activeFilter);
+      ? courses
+      : courses.filter((c) => c.category === activeFilter);
 
-  // Show 6 initially when "All" is active; show everything when filtered
   const isFiltered = activeFilter !== "All";
   const visibleCourses = isFiltered || showAll ? filtered : filtered.slice(0, 6);
   const hasMore = !isFiltered && !showAll && filtered.length > 6;
-
 
   return (
     <section id="courses" className="relative py-24 overflow-hidden">
@@ -204,7 +231,7 @@ export function CourseGrid() {
             Learn from the <span className="gradient-text">Best in Industry</span>
           </h2>
           <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
-            30+ industry-aligned courses across 7 skill tracks. All priced with lifetime access and a certificate of completion.
+            {courses.length}+ industry-aligned courses across 7 skill tracks. All priced with lifetime access and a certificate of completion.
           </p>
         </motion.div>
 
@@ -221,7 +248,7 @@ export function CourseGrid() {
               key={cat}
               onClick={() => {
                 setActiveFilter(cat);
-                setShowAll(false); // Reset pagination when changing filter
+                setShowAll(false);
               }}
               className={`text-xs font-medium px-4 py-1.5 rounded-full border transition-all ${
                 activeFilter === cat
@@ -234,33 +261,46 @@ export function CourseGrid() {
           ))}
         </motion.div>
 
-        {/* Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleCourses.map((course, i) => (
-            <CourseCard key={course.id} course={course} index={i} />
-          ))}
-        </div>
+        {/* Loading state */}
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="h-8 w-8 text-electric animate-spin" />
+          </div>
+        ) : courses.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-slate-400">No courses available yet. Check back soon!</p>
+          </div>
+        ) : (
+          <>
+            {/* Grid */}
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {visibleCourses.map((course, i) => (
+                <CourseCard key={course.id} course={course} index={i} />
+              ))}
+            </div>
 
-        {/* View All button */}
-        <AnimatePresence>
-          {hasMore && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-10 flex justify-center"
-            >
-              <Button
-                onClick={() => setShowAll(true)}
-                variant="outline"
-                className="rounded-full px-8 py-3 border-white/15 text-white hover:bg-white/5 hover:border-white/25 text-sm font-semibold gap-2 transition-all"
-              >
-                View All {filtered.length} Courses
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            {/* View All button */}
+            <AnimatePresence>
+              {hasMore && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mt-10 flex justify-center"
+                >
+                  <Button
+                    onClick={() => setShowAll(true)}
+                    variant="outline"
+                    className="rounded-full px-8 py-3 border-white/15 text-white hover:bg-white/5 hover:border-white/25 text-sm font-semibold gap-2 transition-all"
+                  >
+                    View All {filtered.length} Courses
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        )}
 
         {/* Bottom CTA */}
         <motion.div

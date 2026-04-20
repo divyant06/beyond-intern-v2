@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
+import { createClient } from "@supabase/supabase-js";
 import {
   ArrowLeft,
   Play,
@@ -19,6 +20,7 @@ import {
   BookOpen,
   GraduationCap,
   Sparkles,
+  Layers,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -275,6 +277,15 @@ export default function CourseVideoPage() {
   // ── Enrollment check ──
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
+  const [curriculum, setCurriculum] = useState<string | null>(null);
+
+  // Supabase client for curriculum fetch
+  const supabaseRef = useRef(
+    createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  );
 
   useEffect(() => {
     async function check() {
@@ -285,6 +296,13 @@ export default function CourseVideoPage() {
       try {
         const courses = await getUserCourses(session.user.email);
         setIsEnrolled(courses.some((c: { course_id: string }) => c.course_id === courseId));
+        // Also fetch curriculum from raw_courses
+        const { data: dbCourse } = await supabaseRef.current
+          .from("raw_courses")
+          .select("curriculum")
+          .eq("id", courseId)
+          .single();
+        if (dbCourse?.curriculum) setCurriculum(dbCourse.curriculum);
       } catch {
         setIsEnrolled(false);
       } finally {
@@ -455,6 +473,46 @@ export default function CourseVideoPage() {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* ── Curriculum Journey ── */}
+        {curriculum && (
+          <div className="glass-card rounded-2xl p-6 space-y-5 mt-6">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2">
+              <Layers className="h-5 w-5 text-electric-light" />
+              Course Curriculum
+            </h2>
+            <div className="relative pl-8">
+              {/* Vertical line */}
+              <div className="absolute left-[11px] top-2 bottom-2 w-px bg-linear-to-b from-electric/60 via-electric/30 to-transparent" />
+              {curriculum.split("\n").filter(Boolean).map((module, i, arr) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.08 }}
+                  className={`relative flex items-start gap-4 ${i < arr.length - 1 ? "pb-6" : ""}`}
+                >
+                  {/* Glowing dot */}
+                  <div className="absolute -left-8 top-1 flex items-center justify-center">
+                    <span className="h-[22px] w-[22px] rounded-full bg-electric/10 border border-electric/30 flex items-center justify-center">
+                      <span className="h-2.5 w-2.5 rounded-full bg-electric glow-blue" />
+                    </span>
+                  </div>
+                  {/* Module text */}
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      {module.trim()}
+                    </p>
+                  </div>
+                  {/* Step number */}
+                  <span className="text-[10px] font-bold text-slate-600 shrink-0 mt-0.5">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
           </div>
         )}
       </motion.div>

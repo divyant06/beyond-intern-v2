@@ -14,6 +14,7 @@ import {
   Pencil,
   Users,
   GraduationCap,
+  Database,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ import {
   fetchAllCourses,
   fetchRegisteredUsers,
   fetchActiveEnrollments,
+  migrateHardcodedCourses,
 } from "./actions";
 
 const ADMIN_EMAILS = ["info@beyondintern.com", "ansupoddar11@gmail.com"];
@@ -41,6 +43,8 @@ interface RawCourse {
   duration: string;
   level: string;
   outcomes: string;
+  image_url?: string;
+  curriculum?: string;
   created_at?: string;
 }
 
@@ -75,7 +79,11 @@ export default function AdminPage() {
     duration: "",
     level: "",
     outcomes: "",
+    image_url: "",
+    curriculum: "",
   });
+  const [migrateStatus, setMigrateStatus] = useState<Status>("idle");
+  const [migrateMsg, setMigrateMsg] = useState("");
   const [courseStatus, setCourseStatus] = useState<Status>("idle");
   const [courseMsg, setCourseMsg] = useState("");
   const [publishedCourses, setPublishedCourses] = useState<RawCourse[]>([]);
@@ -148,7 +156,7 @@ export default function AdminPage() {
         editingCourse ? "Course updated successfully!" : "Course published successfully!"
       );
       setCourseStatus("success");
-      setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "" });
+      setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", image_url: "", curriculum: "" });
       setEditingCourse(null);
       loadCourses();
     } else {
@@ -174,9 +182,27 @@ export default function AdminPage() {
       duration: course.duration,
       level: course.level,
       outcomes: course.outcomes,
+      image_url: course.image_url || "",
+      curriculum: course.curriculum || "",
     });
     setEditingCourse(course.id);
     setActiveTab("courses");
+  }
+
+  // ── Migration Handler ──
+  async function handleMigrate() {
+    if (!confirm("This will upsert all 30+ hardcoded courses into the database. Continue?")) return;
+    setMigrateStatus("loading");
+    setMigrateMsg("");
+    const result = await migrateHardcodedCourses();
+    if (result.success) {
+      setMigrateMsg(`Successfully migrated ${(result as { count: number }).count} courses!`);
+      setMigrateStatus("success");
+      loadCourses();
+    } else {
+      setMigrateMsg((result as { message: string }).message || "Migration failed.");
+      setMigrateStatus("error");
+    }
   }
 
   /* Loading skeleton */
@@ -432,6 +458,27 @@ export default function AdminPage() {
                   />
                 </div>
 
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Image URL</label>
+                  <Input
+                    placeholder="https://images.unsplash.com/..."
+                    value={courseForm.image_url}
+                    onChange={(e) => setCourseForm({ ...courseForm, image_url: e.target.value })}
+                    className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-electric/50 rounded-xl"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Curriculum (one module per line)</label>
+                  <textarea
+                    placeholder={"Week 1-2: Foundations\nWeek 3-4: Core Skills\nWeek 5-8: Advanced Topics\nWeek 9-12: Capstone Project"}
+                    value={courseForm.curriculum}
+                    onChange={(e) => setCourseForm({ ...courseForm, curriculum: e.target.value })}
+                    rows={5}
+                    className="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:border-electric/50 transition-colors placeholder:text-white/40 resize-none"
+                  />
+                </div>
+
                 {courseStatus !== "idle" && courseStatus !== "loading" && (
                   <motion.div
                     initial={{ opacity: 0, y: -8 }}
@@ -466,7 +513,7 @@ export default function AdminPage() {
                       type="button"
                       onClick={() => {
                         setEditingCourse(null);
-                        setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "" });
+                        setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", image_url: "", curriculum: "" });
                       }}
                       className="h-11 bg-white/5 border border-white/10 text-slate-300 rounded-xl hover:bg-white/10"
                     >
@@ -515,6 +562,45 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+
+            {/* Migrate Old Courses */}
+            <div className="glass-card rounded-2xl p-6 space-y-4">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Database className="h-5 w-5 text-amber-400" />
+                Data Migration
+              </h2>
+              <p className="text-xs text-slate-400">
+                Bulk-upsert all 30+ hardcoded courses from the codebase into the Supabase raw_courses table.
+              </p>
+              {migrateStatus !== "idle" && migrateStatus !== "loading" && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-3 rounded-xl flex items-start gap-3 text-sm ${
+                    migrateStatus === "success"
+                      ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
+                      : "bg-rose-500/10 border border-rose-500/20 text-rose-300"
+                  }`}
+                >
+                  {migrateStatus === "success" ? <CheckCircle className="h-4 w-4 mt-0.5" /> : <AlertCircle className="h-4 w-4 mt-0.5" />}
+                  {migrateMsg}
+                </motion.div>
+              )}
+              <Button
+                onClick={handleMigrate}
+                disabled={migrateStatus === "loading"}
+                className="h-11 bg-amber-500/10 border border-amber-500/20 text-amber-300 rounded-xl hover:bg-amber-500/20 transition-colors font-semibold"
+              >
+                {migrateStatus === "loading" ? (
+                  <div className="h-5 w-5 rounded-full border-2 border-amber-400/30 border-t-amber-400 animate-spin" />
+                ) : (
+                  <>
+                    <Database className="mr-2 h-4 w-4" />
+                    Migrate Old Courses to DB
+                  </>
+                )}
+              </Button>
+            </div>
           </motion.div>
         )}
 

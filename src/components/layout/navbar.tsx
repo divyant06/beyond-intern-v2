@@ -54,7 +54,7 @@ export function Navbar() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         hidden ? "-translate-y-full" : "translate-y-0"
       } ${
-        scrolled ? "glass-nav shadow-lg" : "bg-transparent"
+        scrolled ? "bg-navy/95 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/20" : "bg-transparent"
       }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
