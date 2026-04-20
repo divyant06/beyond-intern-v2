@@ -1,13 +1,47 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Shield, LayoutDashboard, BookOpen, Users, Settings, BarChart3 } from "lucide-react";
+import Link from "next/link";
+import {
+  Shield,
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  BarChart3,
+  Settings,
+  ArrowRight,
+} from "lucide-react";
 
-const comingSoonFeatures = [
-  { icon: BookOpen, label: "Course Management", description: "Create, edit, and publish courses" },
-  { icon: Users, label: "Student Analytics", description: "Track enrollment and engagement" },
-  { icon: BarChart3, label: "Revenue Dashboard", description: "Monitor payments and revenue" },
-  { icon: Settings, label: "Platform Settings", description: "Configure site-wide preferences" },
+// Features — first two link to the live dashboard, rest are informational
+const adminFeatures = [
+  {
+    icon: BookOpen,
+    label: "Course Management",
+    description: "Create, edit, and publish courses",
+    href: "/dashboard/admin",
+    live: true,
+  },
+  {
+    icon: Users,
+    label: "Student Analytics",
+    description: "Track enrollment and engagement",
+    href: "/dashboard/admin",
+    live: true,
+  },
+  {
+    icon: BarChart3,
+    label: "Revenue Dashboard",
+    description: "Monitor payments and revenue",
+    href: null,
+    live: false,
+  },
+  {
+    icon: Settings,
+    label: "Platform Settings",
+    description: "Configure site-wide preferences",
+    href: null,
+    live: false,
+  },
 ];
 
 export default function AdminPage() {
@@ -51,8 +85,8 @@ export default function AdminPage() {
           transition={{ delay: 0.4 }}
           className="text-4xl font-bold text-white sm:text-5xl mb-4"
         >
-          Course Management{" "}
-          <span className="gradient-text">Coming Soon</span>
+          Course{" "}
+          <span className="gradient-text">Management Suite</span>
         </motion.h1>
 
         <motion.p
@@ -61,8 +95,8 @@ export default function AdminPage() {
           transition={{ delay: 0.5 }}
           className="text-lg text-slate-400 max-w-lg mx-auto mb-12"
         >
-          We&apos;re building a powerful admin dashboard to manage courses,
-          students, and platform analytics.
+          A powerful admin dashboard to manage courses, students, and platform
+          analytics. Click any live feature below to get started.
         </motion.p>
 
         {/* Feature grid */}
@@ -72,32 +106,66 @@ export default function AdminPage() {
           transition={{ delay: 0.6 }}
           className="grid grid-cols-1 sm:grid-cols-2 gap-4"
         >
-          {comingSoonFeatures.map((feature, i) => (
-            <motion.div
-              key={feature.label}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 + i * 0.1 }}
-              className="glass-card rounded-xl p-5 text-left border border-white/5 hover:border-electric/20 transition-colors group"
-            >
-              <div className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-lg bg-electric/10 flex items-center justify-center shrink-0 group-hover:bg-electric/20 transition-colors">
-                  <feature.icon className="h-5 w-5 text-electric-light" />
+          {adminFeatures.map((feature, i) => {
+            const card = (
+              <motion.div
+                key={feature.label}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 + i * 0.1 }}
+                className={`glass-card rounded-xl p-5 text-left border transition-all group ${
+                  feature.live
+                    ? "border-electric/20 hover:border-electric/50 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] cursor-pointer"
+                    : "border-white/5 hover:border-white/10 opacity-70"
+                }`}
+              >
+                <div className="flex items-start gap-4">
+                  <div
+                    className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                      feature.live
+                        ? "bg-electric/10 group-hover:bg-electric/25"
+                        : "bg-electric/5"
+                    }`}
+                  >
+                    <feature.icon className="h-5 w-5 text-electric-light" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-white">
+                        {feature.label}
+                      </h3>
+                      {feature.live ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                          LIVE
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/5 text-slate-500 border border-white/10">
+                          SOON
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {feature.description}
+                    </p>
+                  </div>
+                  {feature.live && (
+                    <ArrowRight className="h-4 w-4 text-slate-600 group-hover:text-electric-light group-hover:translate-x-0.5 transition-all shrink-0 mt-0.5" />
+                  )}
                 </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-white mb-1">
-                    {feature.label}
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    {feature.description}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+
+            return feature.href ? (
+              <Link key={feature.label} href={feature.href}>
+                {card}
+              </Link>
+            ) : (
+              <div key={feature.label}>{card}</div>
+            );
+          })}
         </motion.div>
 
-        {/* Pulsing indicator */}
+        {/* Live indicator */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -105,10 +173,10 @@ export default function AdminPage() {
           className="mt-10 flex items-center justify-center gap-2 text-slate-500 text-sm"
         >
           <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-electric/60 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-electric" />
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500/60 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
           </span>
-          Under active development
+          Dashboard is live — click Course Management or Student Analytics to enter
         </motion.div>
       </motion.div>
     </div>

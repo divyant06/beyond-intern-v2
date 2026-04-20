@@ -156,7 +156,7 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
               <span className="text-xl font-bold text-white">£{course.price}</span>
             )}
           </div>
-          <Link href={course.price === null ? "#" : `/checkout?course=${course.id}`}>
+          <Link href={`/dashboard/courses/${course.id}`}>
             <Button
               size="sm"
               className="gradient-electric text-white rounded-full px-5 text-xs font-semibold hover:opacity-90 transition-opacity"

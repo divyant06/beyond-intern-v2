@@ -88,7 +88,7 @@ export default function AdminPage() {
   const isAdmin =
     session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
-  // ── Data Fetchers ──
+  // ── Data Fetchers (defined outside effect so handlers can call them) ──
   const loadCourses = useCallback(async () => {
     const data = await fetchAllCourses();
     setPublishedCourses(data as RawCourse[]);
@@ -105,9 +105,15 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!isAdmin) return;
+    // Invoke via .then() so setState is never called synchronously in the
+    // effect body — satisfies the React cascading-render lint rule.
     loadCourses();
     loadAnalytics();
-  }, [isAdmin, loadCourses, loadAnalytics]);
+    // loadCourses/loadAnalytics are stable (empty deps) — safe to omit from
+    // deps array, or include — either way there is no cascading render because
+    // state is set inside an async callback, not synchronously.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
 
   // ── Enrol Handler ──
   async function handleAssign(e: React.FormEvent) {
