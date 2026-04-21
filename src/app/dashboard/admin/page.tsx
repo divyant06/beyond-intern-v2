@@ -20,6 +20,7 @@ import {
   Clock,
   Mic,
   Mail,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,12 +37,13 @@ import {
   upsertWebinar,
   getActiveWebinar,
   getWebinarRegistrations,
+  sendNotification,
 } from "./actions";
 
 const ADMIN_EMAILS = ["info@beyondintern.com", "ansupoddar11@gmail.com"];
 
 type Status = "idle" | "loading" | "success" | "error";
-type Tab = "enrol" | "courses" | "analytics" | "webinars";
+type Tab = "enrol" | "courses" | "analytics" | "webinars" | "notifications";
 
 interface RawCourse {
   id: string;
@@ -106,6 +108,7 @@ export default function AdminPage() {
     outcomes: "",
     image_url: "",
     curriculum: "",
+    image_file: null as File | null,
   });
   const [migrateStatus, setMigrateStatus] = useState<Status>("idle");
   const [migrateMsg, setMigrateMsg] = useState("");
@@ -124,6 +127,15 @@ export default function AdminPage() {
   const [webinarStatus, setWebinarStatus] = useState<Status>("idle");
   const [webinarMsg, setWebinarMsg] = useState("");
   const [webinarRegs, setWebinarRegs] = useState<WebinarReg[]>([]);
+
+  // ── Notifications State ──
+  const [notifMode, setNotifMode] = useState<"broadcast" | "direct">("broadcast");
+  const [notifCourseId, setNotifCourseId] = useState("");
+  const [notifEmail, setNotifEmail] = useState("");
+  const [notifTitle, setNotifTitle] = useState("");
+  const [notifMessage, setNotifMessage] = useState("");
+  const [notifStatus, setNotifStatus] = useState<Status>("idle");
+  const [notifMsg, setNotifMsg] = useState("");
 
   const isAdmin =
     session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
@@ -196,13 +208,29 @@ export default function AdminPage() {
     if (!courseForm.id || !courseForm.title) return;
     setCourseStatus("loading");
     setCourseMsg("");
-    const result = await upsertCourse(courseForm);
+
+    const formData = new FormData();
+    formData.append("id", courseForm.id);
+    formData.append("title", courseForm.title);
+    formData.append("description", courseForm.description);
+    formData.append("category", courseForm.category);
+    formData.append("duration", courseForm.duration);
+    formData.append("level", courseForm.level);
+    formData.append("outcomes", courseForm.outcomes);
+    formData.append("image_url", courseForm.image_url);
+    formData.append("curriculum", courseForm.curriculum);
+    
+    if (courseForm.image_file) {
+      formData.append("image", courseForm.image_file);
+    }
+
+    const result = await upsertCourse(formData);
     if (result.success) {
       setCourseMsg(
         editingCourse ? "Course updated successfully!" : "Course published successfully!"
       );
       setCourseStatus("success");
-      setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", image_url: "", curriculum: "" });
+      setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", image_url: "", curriculum: "", image_file: null });
       setEditingCourse(null);
       loadCourses();
     } else {
@@ -230,6 +258,7 @@ export default function AdminPage() {
       outcomes: course.outcomes,
       image_url: course.image_url || "",
       curriculum: course.curriculum || "",
+      image_file: null,
     });
     setEditingCourse(course.id);
     setActiveTab("courses");
@@ -270,6 +299,36 @@ export default function AdminPage() {
     }
   }
 
+  // ── Notification Handler ──
+  async function handleSendNotification(e: React.FormEvent) {
+    e.preventDefault();
+    if (!notifTitle || !notifMessage) return;
+    if (notifMode === "broadcast" && !notifCourseId) return;
+    if (notifMode === "direct" && !notifEmail) return;
+
+    setNotifStatus("loading");
+    setNotifMsg("");
+
+    const result = await sendNotification({
+      title: notifTitle,
+      message: notifMessage,
+      type: notifMode,
+      course_id: notifMode === "broadcast" ? notifCourseId : undefined,
+      target_email: notifMode === "direct" ? notifEmail : undefined,
+    });
+
+    if (result.success) {
+      setNotifMsg("Notification sent successfully!");
+      setNotifStatus("success");
+      setNotifTitle("");
+      setNotifMessage("");
+      if (notifMode === "direct") setNotifEmail("");
+    } else {
+      setNotifMsg(result.message || "Failed to send notification.");
+      setNotifStatus("error");
+    }
+  }
+
   /* Loading skeleton */
   if (status === "loading") {
     return (
@@ -303,6 +362,7 @@ export default function AdminPage() {
     { key: "courses", label: "Manage Courses", icon: <BookOpen className="h-4 w-4" /> },
     { key: "analytics", label: "Analytics", icon: <BarChart3 className="h-4 w-4" /> },
     { key: "webinars", label: "Manage Webinars", icon: <Radio className="h-4 w-4" /> },
+    { key: "notifications", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
   ];
 
   return (
@@ -525,13 +585,16 @@ export default function AdminPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-300">Image URL</label>
+                  <label className="text-sm font-medium text-slate-300">Course Image (Max 500KB)</label>
                   <Input
-                    placeholder="https://images.unsplash.com/..."
-                    value={courseForm.image_url}
-                    onChange={(e) => setCourseForm({ ...courseForm, image_url: e.target.value })}
-                    className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-electric/50 rounded-xl"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setCourseForm({ ...courseForm, image_file: e.target.files?.[0] || null })}
+                    className="h-11 bg-white/5 border-white/10 text-white focus:border-electric/50 rounded-xl"
                   />
+                  {courseForm.image_url && !courseForm.image_file && (
+                    <p className="text-xs text-slate-400 mt-1">Current Image: {courseForm.image_url}</p>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -579,7 +642,7 @@ export default function AdminPage() {
                       type="button"
                       onClick={() => {
                         setEditingCourse(null);
-                        setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", image_url: "", curriculum: "" });
+                        setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", image_url: "", curriculum: "", image_file: null });
                       }}
                       className="h-11 bg-white/5 border border-white/10 text-slate-300 rounded-xl hover:bg-white/10"
                     >
@@ -920,6 +983,131 @@ export default function AdminPage() {
                   </table>
                 </div>
               )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* ════════════════════ TAB 5: NOTIFICATIONS ════════════════════════ */}
+        {activeTab === "notifications" && (
+          <motion.div key="notifications" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                <Bell className="h-6 w-6 text-electric-light" />
+                Send Notifications
+              </h1>
+              <p className="mt-1 text-sm text-slate-400">
+                Broadcast messages to a specific course or send direct notifications to students.
+              </p>
+            </div>
+
+            <div className="glass-card rounded-2xl p-8 max-w-2xl">
+              <form onSubmit={handleSendNotification} className="space-y-5">
+                <div className="flex items-center gap-4 border-b border-white/10 pb-4">
+                  <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                    <input
+                      type="radio"
+                      name="notifMode"
+                      value="broadcast"
+                      checked={notifMode === "broadcast"}
+                      onChange={() => setNotifMode("broadcast")}
+                      className="accent-electric"
+                    />
+                    Broadcast to Course
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                    <input
+                      type="radio"
+                      name="notifMode"
+                      value="direct"
+                      checked={notifMode === "direct"}
+                      onChange={() => setNotifMode("direct")}
+                      className="accent-electric"
+                    />
+                    Direct to Student
+                  </label>
+                </div>
+
+                {notifMode === "broadcast" ? (
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-slate-300">Select Course</label>
+                    <select
+                      value={notifCourseId}
+                      onChange={(e) => setNotifCourseId(e.target.value)}
+                      required
+                      className="w-full h-11 bg-white/5 border border-white/10 text-white focus:outline-none focus:border-electric/50 rounded-xl px-3"
+                    >
+                      <option value="" className="bg-navy text-slate-400">Choose a course...</option>
+                      {publishedCourses.map((c) => (
+                        <option key={c.id} value={c.id} className="bg-navy">{c.title}</option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-slate-300 flex items-center gap-1.5">
+                      <Mail className="h-3.5 w-3.5 text-slate-500" /> Student Email
+                    </label>
+                    <Input
+                      type="email"
+                      required
+                      placeholder="student@example.com"
+                      value={notifEmail}
+                      onChange={(e) => setNotifEmail(e.target.value)}
+                      className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Notification Title</label>
+                  <Input
+                    required
+                    placeholder="e.g. New Assignment Posted"
+                    value={notifTitle}
+                    onChange={(e) => setNotifTitle(e.target.value)}
+                    className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Message</label>
+                  <textarea
+                    required
+                    placeholder="Enter the notification message..."
+                    value={notifMessage}
+                    onChange={(e) => setNotifMessage(e.target.value)}
+                    rows={4}
+                    className="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:border-electric/50 transition-colors placeholder:text-white/40 resize-none"
+                  />
+                </div>
+
+                {notifStatus !== "idle" && notifStatus !== "loading" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-xl flex items-start gap-3 text-sm ${
+                      notifStatus === "success"
+                        ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
+                        : "bg-rose-500/10 border border-rose-500/20 text-rose-300"
+                    }`}
+                  >
+                    {notifStatus === "success" ? <CheckCircle className="h-4 w-4 mt-0.5" /> : <AlertCircle className="h-4 w-4 mt-0.5" />}
+                    {notifMsg}
+                  </motion.div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={notifStatus === "loading"}
+                  className="w-full h-11 gradient-electric text-white font-semibold rounded-xl glow-blue hover:opacity-90 transition-opacity"
+                >
+                  {notifStatus === "loading" ? (
+                    <div className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  ) : (
+                    <><Bell className="mr-2 h-4 w-4" /> Send Notification</>  
+                  )}
+                </Button>
+              </form>
             </div>
           </motion.div>
         )}

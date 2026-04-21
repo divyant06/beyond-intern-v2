@@ -50,29 +50,54 @@ export async function assignCourse(email: string, courseId: string) {
 }
 
 // ─── Upsert a course into raw_courses table (with image_url + curriculum) ──────
-export async function upsertCourse(coursePayload: {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  duration: string;
-  level: string;
-  outcomes: string;
-  image_url?: string;
-  curriculum?: string;
-}) {
+export async function upsertCourse(formData: FormData) {
   try {
+    const id = formData.get("id") as string;
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const category = formData.get("category") as string;
+    const duration = formData.get("duration") as string;
+    const level = formData.get("level") as string;
+    const outcomes = formData.get("outcomes") as string;
+    let image_url = formData.get("image_url") as string | null;
+    const curriculum = formData.get("curriculum") as string | null;
+    const file = formData.get("image") as File | null;
+
+    if (file && file.size > 0) {
+      if (file.size > 500 * 1024) {
+        return { success: false, message: "Image exceeds 500KB limit." };
+      }
+
+      const ext = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from("course_images")
+        .upload(fileName, file, { contentType: file.type });
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        return { success: false, message: "Failed to upload image." };
+      }
+
+      const {
+        data: { publicUrl },
+      } = supabaseAdmin.storage.from("course_images").getPublicUrl(fileName);
+
+      image_url = publicUrl;
+    }
+
     const { error } = await supabaseAdmin.from("raw_courses").upsert(
       {
-        id: coursePayload.id,
-        title: coursePayload.title.trim(),
-        description: coursePayload.description.trim(),
-        category: coursePayload.category.trim(),
-        duration: coursePayload.duration.trim(),
-        level: coursePayload.level.trim(),
-        outcomes: coursePayload.outcomes.trim(),
-        image_url: (coursePayload.image_url || "").trim() || null,
-        curriculum: (coursePayload.curriculum || "").trim() || null,
+        id,
+        title: title.trim(),
+        description: description.trim(),
+        category: category.trim(),
+        duration: duration.trim(),
+        level: level.trim(),
+        outcomes: outcomes.trim(),
+        image_url: (image_url || "").trim() || null,
+        curriculum: (curriculum || "").trim() || null,
       },
       { onConflict: "id" }
     );
@@ -285,5 +310,65 @@ export async function registerForWebinar(formData: { full_name: string; email: s
   } catch (error) {
     console.error("Register for webinar error:", error);
     return { success: false, message: "Registration failed. Please try again." };
+  }
+}
+
+// ─── Send Notification ────────────────────────────────────────────────────────
+export async function sendNotification(data: {
+  title: string;
+  message: string;
+  type: "broadcast" | "direct";
+  course_id?: string;
+  target_email?: string;
+}) {
+  try {
+    const { error } = await supabaseAdmin.from("notifications").insert({
+      title: data.title.trim(),
+      message: data.message.trim(),
+      type: data.type,
+      course_id: data.type === "broadcast" ? data.course_id : null,
+      target_email: data.type === "direct" ? data.target_email?.toLowerCase().trim() : null,
+    });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Send notification error:", error);
+    return { success: false, message: "Failed to send notification." };
+  }
+}
+
+// ─── Fetch Notifications for a User ───────────────────────────────────────────
+export async function fetchNotifications(userEmail: string) {
+  try {
+    // 1. Get the user's enrolled courses
+    const { data: enrollments } = await supabaseAdmin
+      .from("user_courses")
+      .select("course_id")
+      .eq("user_email", userEmail);
+
+    const enrolledCourseIds = (enrollments || []).map((e) => e.course_id);
+
+    // 2. Fetch notifications where target_email = userEmail OR course_id is in enrolledCourseIds
+    let query = supabaseAdmin
+      .from("notifications")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    // Build the "or" string. Since Supabase "or" takes a single string, we must construct it carefully.
+    const orConditions = [];
+    orConditions.push(`target_email.eq.${userEmail}`);
+    if (enrolledCourseIds.length > 0) {
+      orConditions.push(`course_id.in.(${enrolledCourseIds.join(",")})`);
+    }
+
+    query = query.or(orConditions.join(","));
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Fetch notifications error:", error);
+    return [];
   }
 }

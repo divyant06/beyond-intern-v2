@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Bell, Search, ChevronDown, LogOut } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Bell, Search, ChevronDown, LogOut, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,8 @@ import {
 import { useSession, signOut } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
+import { fetchAllCourses } from "@/app/dashboard/admin/actions";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function TopHeader() {
   const { data: session } = useSession();
@@ -21,16 +23,84 @@ export function TopHeader() {
   const displayName = user?.name || user?.email?.split("@")[0] || "Student";
   const initial = displayName.charAt(0).toUpperCase();
   const [hasNotifications, setHasNotifications] = useState(true);
+  
+  // ── Predictive Search State ──
+  const [searchQuery, setSearchQuery] = useState("");
+  const [allCourses, setAllCourses] = useState<{ id: string; title: string; category: string }[]>([]);
+  const [showResults, setShowResults] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchAllCourses().then(data => setAllCourses(data || []));
+
+    function handleClickOutside(event: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredCourses = searchQuery.trim() === "" 
+    ? [] 
+    : allCourses.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/5 bg-navy/80 backdrop-blur-xl px-6">
       {/* Search */}
-      <div className="relative max-w-md flex-1">
+      <div className="relative max-w-md flex-1" ref={searchRef}>
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
         <Input
           placeholder="Search courses, modules..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setShowResults(true);
+          }}
+          onFocus={() => setShowResults(true)}
           className="h-9 pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 rounded-lg w-full max-w-sm"
         />
+        
+        <AnimatePresence>
+          {showResults && searchQuery.trim() !== "" && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="absolute top-full left-0 mt-2 w-full max-w-sm bg-navy border border-white/10 rounded-xl shadow-xl shadow-black/50 overflow-hidden z-50"
+            >
+              {filteredCourses.length > 0 ? (
+                <ul className="max-h-64 overflow-y-auto py-2">
+                  {filteredCourses.map((course) => (
+                    <li key={course.id}>
+                      <Link
+                        href={`/dashboard/courses/${course.id}`}
+                        onClick={() => {
+                          setShowResults(false);
+                          setSearchQuery("");
+                        }}
+                        className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                          <BookOpen className="h-4 w-4 text-electric-light" />
+                        </div>
+                        <div className="flex-1 truncate">
+                          <p className="text-sm font-medium text-white truncate">{course.title}</p>
+                          <p className="text-xs text-slate-500 truncate">{course.category}</p>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="px-4 py-6 text-center text-sm text-slate-500">
+                  No courses found for "{searchQuery}"
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Right side */}
