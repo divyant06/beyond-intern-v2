@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Bell, Info } from "lucide-react";
+import { Bell } from "lucide-react";
 
 function getRelativeTime(date: Date | string) {
   const now = new Date();
@@ -94,16 +94,8 @@ export default function NotificationsPage() {
                 onClick={() => toggleExpand(notif.id)}
                 className="flex items-start gap-4 p-5 transition-colors hover:bg-white/5 cursor-pointer"
               >
-                <div
-                  className={`mt-0.5 h-9 w-9 rounded-xl ${
-                    notif.type === "broadcast" ? "bg-electric" : "bg-gold"
-                  } flex items-center justify-center shrink-0`}
-                >
-                  {notif.type === "broadcast" ? (
-                    <Bell className="h-4 w-4 text-white" />
-                  ) : (
-                    <Info className="h-4 w-4 text-white" />
-                  )}
+                <div className="mt-0.5 w-10 h-10 rounded-full border border-blue-500/30 bg-blue-500/10 flex items-center justify-center shrink-0">
+                  <span className="font-bold text-blue-500">Bi</span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

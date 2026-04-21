@@ -201,7 +201,7 @@ export default function LiveTheaterPage() {
             <div className="inline-flex items-center gap-2 bg-electric/10 border border-electric/20 rounded-full px-4 py-1.5 mb-3">
               <Radio className="h-3.5 w-3.5 text-electric-light animate-pulse" />
               <span className="text-electric-light text-xs font-semibold">
-                {webinarTitle} · {webinarDate}
+                {webinarTitle} - {webinarDate}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">

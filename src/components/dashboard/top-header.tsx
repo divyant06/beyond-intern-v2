@@ -22,7 +22,6 @@ export function TopHeader() {
   const user = session?.user;
   const displayName = user?.name || user?.email?.split("@")[0] || "Student";
   const initial = displayName.charAt(0).toUpperCase();
-  const [hasNotifications, setHasNotifications] = useState(true);
   
   // ── Predictive Search State ──
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,7 +94,7 @@ export function TopHeader() {
                 </ul>
               ) : (
                 <div className="px-4 py-6 text-center text-sm text-slate-500">
-                  No courses found for "{searchQuery}"
+                  No courses found for &quot;{searchQuery}&quot;
                 </div>
               )}
             </motion.div>
@@ -106,7 +105,7 @@ export function TopHeader() {
       {/* Right side */}
       <div className="flex items-center gap-3">
         {/* Notifications */}
-        <Link href="/dashboard/notifications" onClick={() => setHasNotifications(false)}>
+        <Link href="/dashboard/notifications">
           <Button
             variant="ghost"
             size="icon"
@@ -114,11 +113,6 @@ export function TopHeader() {
             aria-label="Notifications"
           >
             <Bell className="h-5 w-5" />
-            {hasNotifications && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose text-[9px] font-bold text-white">
-                2
-              </span>
-            )}
           </Button>
         </Link>
 

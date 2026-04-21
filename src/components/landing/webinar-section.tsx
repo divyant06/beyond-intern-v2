@@ -214,27 +214,21 @@ export function WebinarSection() {
                   </Button>
                 </Link>
               </motion.div>
-              {[
-                { date: "12 Apr", title: "Breaking into Tech 2026", status: "upcoming" },
-                { date: "26 Apr", title: "System Design Masterclass", status: "upcoming" },
-              ].map((w) => (
-                <div
-                  key={w.date}
-                  className="py-2.5 border-b border-white/5 last:border-0"
-                >
+              {webinar ? (
+                <div className="py-2.5 border-b border-white/5 last:border-0">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
-                      <div className="text-xs font-semibold text-electric-light w-12">
-                        {w.date}
+                      <div className="text-xs font-semibold text-electric-light w-20 truncate">
+                        {webinarDate}
                       </div>
-                      <p className="text-xs text-slate-300">{w.title}</p>
+                      <p className="text-xs text-slate-300 truncate max-w-[120px]">{webinarTitle}</p>
                     </div>
                     <Badge className="bg-electric/10 text-electric-light border-electric/20 text-[10px]">
                       📅 Soon
                     </Badge>
                   </div>
                 </div>
-              ))}
+              ) : null}
             </div>
           </motion.div>
 
