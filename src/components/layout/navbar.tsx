@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { Menu, ChevronRight, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,40 +21,10 @@ const navLinks = [
 ];
 
 export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const { data: session, status } = useSession();
 
-  useEffect(() => {
-    let lastScrollY = window.scrollY;
-
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      setScrolled(currentScrollY > 20);
-
-      // Hide only if scrolled down significantly, show if scrolling up
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHidden(true);
-      } else {
-        setHidden(false);
-      }
-      
-      lastScrollY = currentScrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
-    <motion.header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        hidden ? "-translate-y-full" : "translate-y-0"
-      } ${
-        scrolled ? "bg-navy/95 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/20" : "bg-transparent"
-      }`}
-    >
+    <header className="absolute top-0 left-0 w-full z-50 bg-transparent">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
@@ -240,6 +208,6 @@ export function Navbar() {
           </SheetContent>
         </Sheet>
       </nav>
-    </motion.header>
+    </header>
   );
 }
