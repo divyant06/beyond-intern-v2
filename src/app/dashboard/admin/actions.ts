@@ -181,3 +181,109 @@ export async function migrateHardcodedCourses() {
     return { success: false, message: "Migration failed. Check console for details." };
   }
 }
+
+// ─── Upsert the active webinar ─────────────────────────────────────────────────
+export async function upsertWebinar(data: {
+  id?: string;
+  title: string;
+  speaker: string;
+  webinar_date: string;
+  webinar_time: string;
+}) {
+  try {
+    if (data.id) {
+      // Update existing
+      const { error } = await supabaseAdmin
+        .from("webinars")
+        .update({
+          title: data.title.trim(),
+          speaker: data.speaker.trim(),
+          webinar_date: data.webinar_date.trim(),
+          webinar_time: data.webinar_time.trim(),
+          is_active: true,
+        })
+        .eq("id", data.id);
+      if (error) throw error;
+    } else {
+      // Deactivate all first, then insert a new active one
+      await supabaseAdmin.from("webinars").update({ is_active: false }).eq("is_active", true);
+      const { error } = await supabaseAdmin.from("webinars").insert({
+        title: data.title.trim(),
+        speaker: data.speaker.trim(),
+        webinar_date: data.webinar_date.trim(),
+        webinar_time: data.webinar_time.trim(),
+        is_active: true,
+      });
+      if (error) throw error;
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Upsert webinar error:", error);
+    return { success: false, message: "Failed to save webinar." };
+  }
+}
+
+// ─── Get the single active webinar ────────────────────────────────────────────
+export async function getActiveWebinar() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("webinars")
+      .select("*")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error && error.code !== "PGRST116") throw error;
+    return data ?? null;
+  } catch (error) {
+    console.error("Get active webinar error:", error);
+    return null;
+  }
+}
+
+// ─── Get all webinar registrations ────────────────────────────────────────────
+export async function getWebinarRegistrations() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("webinar_registrations")
+      .select("id, full_name, email, created_at, webinar_id")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Get registrations error:", error);
+    return [];
+  }
+}
+
+// ─── Register a user for the active webinar ────────────────────────────────────
+export async function registerForWebinar(formData: { full_name: string; email: string }) {
+  try {
+    // Get the active webinar ID
+    const webinar = await getActiveWebinar();
+    if (!webinar) {
+      return { success: false, message: "No active webinar found. Please try again later." };
+    }
+
+    const { error } = await supabaseAdmin.from("webinar_registrations").insert({
+      webinar_id: webinar.id,
+      full_name: formData.full_name.trim(),
+      email: formData.email.trim().toLowerCase(),
+    });
+
+    if (error) {
+      // Unique constraint violation
+      if (error.code === "23505") {
+        return { success: false, message: "You are already registered for this webinar!" };
+      }
+      throw error;
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Register for webinar error:", error);
+    return { success: false, message: "Registration failed. Please try again." };
+  }
+}

@@ -15,6 +15,11 @@ import {
   Users,
   GraduationCap,
   Database,
+  Radio,
+  Calendar,
+  Clock,
+  Mic,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,12 +33,15 @@ import {
   fetchRegisteredUsers,
   fetchActiveEnrollments,
   migrateHardcodedCourses,
+  upsertWebinar,
+  getActiveWebinar,
+  getWebinarRegistrations,
 } from "./actions";
 
 const ADMIN_EMAILS = ["info@beyondintern.com", "ansupoddar11@gmail.com"];
 
 type Status = "idle" | "loading" | "success" | "error";
-type Tab = "enrol" | "courses" | "analytics";
+type Tab = "enrol" | "courses" | "analytics" | "webinars";
 
 interface RawCourse {
   id: string;
@@ -58,6 +66,23 @@ interface Enrollment {
   user_email: string;
   course_id: string;
   created_at: string;
+}
+
+interface WebinarRow {
+  id: string;
+  title: string;
+  speaker: string;
+  webinar_date: string;
+  webinar_time: string;
+  is_active: boolean;
+}
+
+interface WebinarReg {
+  id: string;
+  full_name: string;
+  email: string;
+  created_at: string;
+  webinar_id: string;
 }
 
 export default function AdminPage() {
@@ -93,6 +118,13 @@ export default function AdminPage() {
   const [registeredUsers, setRegisteredUsers] = useState<RegUser[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
 
+  // ── Webinar State ──
+  const [activeWebinar, setActiveWebinar] = useState<WebinarRow | null>(null);
+  const [webinarForm, setWebinarForm] = useState({ title: "", speaker: "", webinar_date: "", webinar_time: "" });
+  const [webinarStatus, setWebinarStatus] = useState<Status>("idle");
+  const [webinarMsg, setWebinarMsg] = useState("");
+  const [webinarRegs, setWebinarRegs] = useState<WebinarReg[]>([]);
+
   const isAdmin =
     session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
@@ -111,13 +143,27 @@ export default function AdminPage() {
     setEnrollments(enrols as Enrollment[]);
   }, []);
 
+  const loadWebinar = useCallback(async () => {
+    const [webinar, regs] = await Promise.all([
+      getActiveWebinar(),
+      getWebinarRegistrations(),
+    ]);
+    const w = webinar as WebinarRow | null;
+    setActiveWebinar(w);
+    if (w) {
+      setWebinarForm({ title: w.title, speaker: w.speaker || "", webinar_date: w.webinar_date || "", webinar_time: w.webinar_time || "" });
+    }
+    setWebinarRegs(regs as WebinarReg[]);
+  }, []);
+
   useEffect(() => {
     if (!isAdmin) return;
     // Invoke via .then() so setState is never called synchronously in the
     // effect body — satisfies the React cascading-render lint rule.
     loadCourses();
     loadAnalytics();
-    // loadCourses/loadAnalytics are stable (empty deps) — safe to omit from
+    loadWebinar();
+    // loadCourses/loadAnalytics/loadWebinar are stable (empty deps) — safe to omit from
     // deps array, or include — either way there is no cascading render because
     // state is set inside an async callback, not synchronously.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,6 +251,25 @@ export default function AdminPage() {
     }
   }
 
+  // ── Webinar Save Handler ──
+  async function handleSaveWebinar(e: React.FormEvent) {
+    e.preventDefault();
+    setWebinarStatus("loading");
+    setWebinarMsg("");
+    const result = await upsertWebinar({
+      id: activeWebinar?.id,
+      ...webinarForm,
+    });
+    if (result.success) {
+      setWebinarMsg("Webinar updated successfully!");
+      setWebinarStatus("success");
+      loadWebinar();
+    } else {
+      setWebinarMsg((result as { message?: string }).message || "Failed to save webinar.");
+      setWebinarStatus("error");
+    }
+  }
+
   /* Loading skeleton */
   if (status === "loading") {
     return (
@@ -237,6 +302,7 @@ export default function AdminPage() {
     { key: "enrol", label: "Enrol Student", icon: <UserPlus className="h-4 w-4" /> },
     { key: "courses", label: "Manage Courses", icon: <BookOpen className="h-4 w-4" /> },
     { key: "analytics", label: "Analytics", icon: <BarChart3 className="h-4 w-4" /> },
+    { key: "webinars", label: "Manage Webinars", icon: <Radio className="h-4 w-4" /> },
   ];
 
   return (
@@ -690,6 +756,168 @@ export default function AdminPage() {
                       </span>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+        {/* ════════════════════ TAB 4: MANAGE WEBINARS ════════════════════════ */}
+        {activeTab === "webinars" && (
+          <motion.div key="webinars" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-8">
+            <div>
+              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                <Radio className="h-6 w-6 text-electric-light" />
+                Manage Webinars
+              </h1>
+              <p className="mt-1 text-sm text-slate-400">
+                Update the active webinar details and view registered candidates.
+              </p>
+            </div>
+
+            {/* ── Webinar Form ── */}
+            <div className="glass-card rounded-2xl p-8">
+              <h2 className="text-base font-semibold text-white mb-6 flex items-center gap-2">
+                <Radio className="h-4 w-4 text-electric-light" />
+                Active Webinar Details
+                {activeWebinar && (
+                  <span className="ml-2 text-[10px] font-medium px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    LIVE
+                  </span>
+                )}
+              </h2>
+              <form onSubmit={handleSaveWebinar} className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300 flex items-center gap-1.5">
+                    <Radio className="h-3.5 w-3.5 text-slate-500" /> Webinar Title
+                  </label>
+                  <Input
+                    required
+                    placeholder="e.g. Boost Your Career & Land Internships"
+                    value={webinarForm.title}
+                    onChange={(e) => setWebinarForm({ ...webinarForm, title: e.target.value })}
+                    className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300 flex items-center gap-1.5">
+                    <Mic className="h-3.5 w-3.5 text-slate-500" /> Speaker Name
+                  </label>
+                  <Input
+                    required
+                    placeholder="e.g. Nandani Sharma"
+                    value={webinarForm.speaker}
+                    onChange={(e) => setWebinarForm({ ...webinarForm, speaker: e.target.value })}
+                    className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-slate-300 flex items-center gap-1.5">
+                      <Calendar className="h-3.5 w-3.5 text-slate-500" /> Date
+                    </label>
+                    <Input
+                      required
+                      placeholder="e.g. 29th March 2026"
+                      value={webinarForm.webinar_date}
+                      onChange={(e) => setWebinarForm({ ...webinarForm, webinar_date: e.target.value })}
+                      className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-slate-300 flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5 text-slate-500" /> Time
+                    </label>
+                    <Input
+                      required
+                      placeholder="e.g. 7:00 PM IST"
+                      value={webinarForm.webinar_time}
+                      onChange={(e) => setWebinarForm({ ...webinarForm, webinar_time: e.target.value })}
+                      className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                {webinarStatus !== "idle" && webinarStatus !== "loading" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-xl flex items-start gap-3 text-sm ${
+                      webinarStatus === "success"
+                        ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
+                        : "bg-rose-500/10 border border-rose-500/20 text-rose-300"
+                    }`}
+                  >
+                    {webinarStatus === "success" ? <CheckCircle className="h-4 w-4 mt-0.5" /> : <AlertCircle className="h-4 w-4 mt-0.5" />}
+                    {webinarMsg}
+                  </motion.div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={webinarStatus === "loading"}
+                  className="w-full h-11 gradient-electric text-white font-semibold rounded-xl glow-blue hover:opacity-90 transition-opacity"
+                >
+                  {webinarStatus === "loading" ? (
+                    <div className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  ) : (
+                    <><Radio className="mr-2 h-4 w-4" /> Save Webinar</>  
+                  )}
+                </Button>
+              </form>
+            </div>
+
+            {/* ── Registered Candidates ── */}
+            <div className="glass-card rounded-2xl p-6 space-y-4">
+              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                <Users className="h-4 w-4 text-electric-light" />
+                Registered Candidates
+                <span className="ml-1 text-xs font-medium px-2 py-0.5 rounded-full bg-electric/10 text-electric-light border border-electric/20">
+                  {webinarRegs.length}
+                </span>
+              </h2>
+
+              {webinarRegs.length === 0 ? (
+                <p className="text-sm text-slate-500 py-4 text-center">No registrations yet. Share the webinar link to get signups!</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-white/5">
+                        <th className="text-left py-2.5 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          <span className="flex items-center gap-1.5"><Users className="h-3 w-3" /> Full Name</span>
+                        </th>
+                        <th className="text-left py-2.5 pr-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          <span className="flex items-center gap-1.5"><Mail className="h-3 w-3" /> Email</span>
+                        </th>
+                        <th className="text-left py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Registered</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {webinarRegs.map((reg, i) => (
+                        <motion.tr
+                          key={reg.id}
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                          className="border-b border-white/5 last:border-0 hover:bg-white/3 transition-colors"
+                        >
+                          <td className="py-3 pr-4 text-slate-200 font-medium">{reg.full_name}</td>
+                          <td className="py-3 pr-4 text-slate-400 font-mono text-xs">{reg.email}</td>
+                          <td className="py-3 text-slate-600 text-xs">
+                            {new Date(reg.created_at).toLocaleDateString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>

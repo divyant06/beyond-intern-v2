@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar,
   Mic,
   CheckCircle2,
   Sparkles,
   ExternalLink,
+  Clock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,8 +21,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { showToast } from "@/components/ui/toaster";
 import Link from "next/link";
+import { getActiveWebinar, registerForWebinar } from "@/app/dashboard/admin/actions";
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+interface ActiveWebinar {
+  id: string;
+  title: string;
+  speaker: string | null;
+  webinar_date: string | null;
+  webinar_time: string | null;
+}
 
 const CAREER_INTERESTS = [
   "Marketing",
@@ -43,7 +53,15 @@ const REFERRAL_SOURCES = [
 
 export function WebinarSection() {
   const [interests, setInterests] = useState<string[]>([]);
+  const [webinar, setWebinar] = useState<ActiveWebinar | null>(null);
+
+  // Registration form state
   const formRef = useRef<HTMLFormElement>(null);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [registered, setRegistered] = useState(false);
+  const [regError, setRegError] = useState("");
 
   const toggleInterest = (item: string) => {
     setInterests((prev) =>
@@ -51,17 +69,40 @@ export function WebinarSection() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Show toast
-    showToast({
-      title: "Thank you for your response! Your spot is secured. 🎉",
-      description: "We'll send the webinar link to your email before 29th March.",
+  // Fetch active webinar on mount
+  useEffect(() => {
+    getActiveWebinar().then((data) => {
+      if (data) setWebinar(data as ActiveWebinar);
     });
-    // Reset form
-    formRef.current?.reset();
-    setInterests([]);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fullName.trim() || !email.trim()) return;
+
+    setSubmitting(true);
+    setRegError("");
+
+    const result = await registerForWebinar({ full_name: fullName, email });
+
+    setSubmitting(false);
+
+    if (result.success) {
+      setRegistered(true);
+      formRef.current?.reset();
+      setInterests([]);
+      setFullName("");
+      setEmail("");
+    } else {
+      setRegError((result as { message?: string }).message || "Registration failed.");
+    }
   };
+
+  // Fallback values
+  const webinarTitle = webinar?.title || "Boost Your Career & Land Internships";
+  const webinarSpeaker = webinar?.speaker || "Nandani Sharma";
+  const webinarDate = webinar?.webinar_date || "29th March 2026";
+  const webinarTime = webinar?.webinar_time || "7:00 PM IST";
 
   return (
     <section id="webinars" className="relative py-24 overflow-hidden">
@@ -104,7 +145,7 @@ export function WebinarSection() {
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-lg">
-                    Boost Your Career &amp; Land Internships
+                    {webinarTitle}
                   </h3>
                   <p className="text-xs text-slate-400">Beyond Intern Live Webinar</p>
                 </div>
@@ -115,14 +156,23 @@ export function WebinarSection() {
                   <Calendar className="h-4 w-4 text-electric-light shrink-0" />
                   <div>
                     <span className="font-semibold text-white">Date:</span>{" "}
-                    29th March 2026
+                    {webinarDate}
                   </div>
                 </div>
+                {webinarTime && (
+                  <div className="flex items-center gap-3 text-sm text-slate-300">
+                    <Clock className="h-4 w-4 text-electric-light shrink-0" />
+                    <div>
+                      <span className="font-semibold text-white">Time:</span>{" "}
+                      {webinarTime}
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-3 text-sm text-slate-300">
                   <Mic className="h-4 w-4 text-electric-light shrink-0" />
                   <div>
                     <span className="font-semibold text-white">Speaker:</span>{" "}
-                    Nandani Sharma
+                    {webinarSpeaker}
                   </div>
                 </div>
               </div>
@@ -199,173 +249,228 @@ export function WebinarSection() {
               {/* Inner glow accent */}
               <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-electric/10 blur-3xl pointer-events-none" />
 
-              <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-1">
-                    Register for Free
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Secure your spot in minutes.
-                  </p>
-                </div>
-
-                {/* ── Personal Info ── */}
-                <fieldset>
-                  <legend className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
-                    🧾 Personal Information
-                  </legend>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="sm:col-span-2">
-                      <Input
-                        required
-                        placeholder="Full Name *"
-                        className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
-                      />
+              <AnimatePresence mode="wait">
+                {registered ? (
+                  /* ── Success State ── */
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center py-16 text-center"
+                  >
+                    <div className="h-20 w-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-5">
+                      <CheckCircle2 className="h-10 w-10 text-emerald-400" />
                     </div>
-                    <Input
-                      required
-                      type="email"
-                      placeholder="Email Address *"
-                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
-                    />
-                    <Input
-                      required
-                      type="tel"
-                      placeholder="Phone Number *"
-                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
-                    />
-                    <div className="sm:col-span-2">
-                      <Input
-                        required
-                        placeholder="City / Location *"
-                        className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
-                      />
+                    <h3 className="text-2xl font-bold text-white mb-2">
+                      You&apos;re Registered! 🎉
+                    </h3>
+                    <p className="text-slate-400 max-w-xs leading-relaxed">
+                      Your spot is secured. We&apos;ll send the webinar link to{" "}
+                      <span className="text-electric-light font-medium">{email}</span>{" "}
+                      before {webinarDate}.
+                    </p>
+                    <div className="mt-8 p-4 rounded-xl bg-electric/5 border border-electric/20 text-sm text-slate-300 max-w-xs">
+                      <p className="font-semibold text-white mb-1">Speaker: {webinarSpeaker}</p>
+                      <p>{webinarDate} · {webinarTime}</p>
                     </div>
-                  </div>
-                </fieldset>
-
-                {/* ── Academic / Professional ── */}
-                <fieldset>
-                  <legend className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
-                    🎓 Academic / Professional Details
-                  </legend>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Select required>
-                      <SelectTrigger className="bg-white/5 border-white/10 text-slate-300 focus:border-electric/50">
-                        <SelectValue placeholder="Current Status *" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-navy-light border-white/10">
-                        <SelectItem value="student" className="text-slate-200 focus:bg-white/10">Student</SelectItem>
-                        <SelectItem value="graduate" className="text-slate-200 focus:bg-white/10">Graduate</SelectItem>
-                        <SelectItem value="professional" className="text-slate-200 focus:bg-white/10">Working Professional</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      required
-                      placeholder="College / Company Name *"
-                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
-                    />
-                    <div className="sm:col-span-2">
-                      <Input
-                        required
-                        placeholder="Field of Study / Work *"
-                        className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
-                      />
+                  </motion.div>
+                ) : (
+                  /* ── Registration Form ── */
+                  <motion.form
+                    key="form"
+                    ref={formRef}
+                    onSubmit={handleSubmit}
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-6"
+                  >
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-1">
+                        Register for Free
+                      </h3>
+                      <p className="text-xs text-slate-400">
+                        Secure your spot in minutes.
+                      </p>
                     </div>
-                  </div>
-                </fieldset>
 
-                {/* ── Career Interests ── */}
-                <fieldset>
-                  <legend className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
-                    💼 Career Interests (select all that apply)
-                  </legend>
-                  <div className="flex flex-wrap gap-2">
-                    {CAREER_INTERESTS.map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => toggleInterest(item)}
-                        className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
-                          interests.includes(item)
-                            ? "gradient-electric text-white border-transparent glow-blue"
-                            : "border-white/10 text-slate-400 hover:border-white/20 bg-white/5"
-                        }`}
+                    {/* ── Personal Info ── */}
+                    <fieldset>
+                      <legend className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+                        🧾 Personal Information
+                      </legend>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="sm:col-span-2">
+                          <Input
+                            required
+                            placeholder="Full Name *"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                          />
+                        </div>
+                        <Input
+                          required
+                          type="email"
+                          placeholder="Email Address *"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                        />
+                        <Input
+                          type="tel"
+                          placeholder="Phone Number"
+                          className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                        />
+                        <div className="sm:col-span-2">
+                          <Input
+                            placeholder="City / Location"
+                            className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                          />
+                        </div>
+                      </div>
+                    </fieldset>
+
+                    {/* ── Academic / Professional ── */}
+                    <fieldset>
+                      <legend className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+                        🎓 Academic / Professional Details
+                      </legend>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Select>
+                          <SelectTrigger className="bg-white/5 border-white/10 text-slate-300 focus:border-electric/50">
+                            <SelectValue placeholder="Current Status" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-navy-light border-white/10">
+                            <SelectItem value="student" className="text-slate-200 focus:bg-white/10">Student</SelectItem>
+                            <SelectItem value="graduate" className="text-slate-200 focus:bg-white/10">Graduate</SelectItem>
+                            <SelectItem value="professional" className="text-slate-200 focus:bg-white/10">Working Professional</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          placeholder="College / Company Name"
+                          className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                        />
+                        <div className="sm:col-span-2">
+                          <Input
+                            placeholder="Field of Study / Work"
+                            className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50"
+                          />
+                        </div>
+                      </div>
+                    </fieldset>
+
+                    {/* ── Career Interests ── */}
+                    <fieldset>
+                      <legend className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+                        💼 Career Interests (select all that apply)
+                      </legend>
+                      <div className="flex flex-wrap gap-2">
+                        {CAREER_INTERESTS.map((item) => (
+                          <button
+                            key={item}
+                            type="button"
+                            onClick={() => toggleInterest(item)}
+                            className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                              interests.includes(item)
+                                ? "gradient-electric text-white border-transparent glow-blue"
+                                : "border-white/10 text-slate-400 hover:border-white/20 bg-white/5"
+                            }`}
+                          >
+                            {item}
+                          </button>
+                        ))}
+                        <input
+                          placeholder="Others..."
+                          className="text-xs px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-300 placeholder:text-slate-600 outline-none focus:border-electric/40 w-28"
+                        />
+                      </div>
+                    </fieldset>
+
+                    {/* ── Expectations & Source ── */}
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
+                        <Textarea
+                          placeholder="What do you expect to learn from this webinar?"
+                          rows={2}
+                          className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 resize-none"
+                        />
+                      </div>
+                      <Select>
+                        <SelectTrigger className="bg-white/5 border-white/10 text-slate-300 focus:border-electric/50">
+                          <SelectValue placeholder="Attended webinar before?" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-navy-light border-white/10">
+                          <SelectItem value="yes" className="text-slate-200 focus:bg-white/10">Yes</SelectItem>
+                          <SelectItem value="no" className="text-slate-200 focus:bg-white/10">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select>
+                        <SelectTrigger className="bg-white/5 border-white/10 text-slate-300 focus:border-electric/50">
+                          <SelectValue placeholder="How did you hear about us?" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-navy-light border-white/10">
+                          {REFERRAL_SOURCES.map((src) => (
+                            <SelectItem key={src} value={src.toLowerCase()} className="text-slate-200 focus:bg-white/10">
+                              {src}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* ── Confirmation & Optional ── */}
+                    <div className="space-y-3">
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          required
+                          className="mt-0.5 h-4 w-4 accent-blue-500 cursor-pointer"
+                        />
+                        <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
+                          I confirm that I will attend the webinar. *
+                        </span>
+                      </label>
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 h-4 w-4 accent-blue-500 cursor-pointer"
+                        />
+                        <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
+                          Yes, I&apos;d like to receive internship opportunities from Beyond Intern.
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* ── Error message ── */}
+                    {regError && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-sm text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl px-4 py-3"
                       >
-                        {item}
-                      </button>
-                    ))}
-                    <input
-                      placeholder="Others..."
-                      className="text-xs px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-slate-300 placeholder:text-slate-600 outline-none focus:border-electric/40 w-28"
-                    />
-                  </div>
-                </fieldset>
+                        {regError}
+                      </motion.p>
+                    )}
 
-                {/* ── Expectations & Source ── */}
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
-                    <Textarea
-                      placeholder="What do you expect to learn from this webinar?"
-                      rows={2}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 resize-none"
-                    />
-                  </div>
-                  <Select>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-slate-300 focus:border-electric/50">
-                      <SelectValue placeholder="Attended webinar before?" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-navy-light border-white/10">
-                      <SelectItem value="yes" className="text-slate-200 focus:bg-white/10">Yes</SelectItem>
-                      <SelectItem value="no" className="text-slate-200 focus:bg-white/10">No</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-slate-300 focus:border-electric/50">
-                      <SelectValue placeholder="How did you hear about us?" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-navy-light border-white/10">
-                      {REFERRAL_SOURCES.map((src) => (
-                        <SelectItem key={src} value={src.toLowerCase()} className="text-slate-200 focus:bg-white/10">
-                          {src}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* ── Confirmation & Optional ── */}
-                <div className="space-y-3">
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      required
-                      className="mt-0.5 h-4 w-4 accent-blue-500 cursor-pointer"
-                    />
-                    <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
-                      I confirm that I will attend the webinar. *
-                    </span>
-                  </label>
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      className="mt-0.5 h-4 w-4 accent-blue-500 cursor-pointer"
-                    />
-                    <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
-                      Yes, I&apos;d like to receive internship opportunities from Beyond Intern.
-                    </span>
-                  </label>
-                </div>
-
-                {/* ── Submit ── */}
-                <Button
-                  type="submit"
-                  className="w-full gradient-electric text-white font-bold rounded-xl py-3 text-base glow-blue hover:opacity-90 transition-opacity"
-                >
-                  Secure My Spot
-                  <Sparkles className="ml-2 h-4 w-4" />
-                </Button>
-              </form>
+                    {/* ── Submit ── */}
+                    <Button
+                      type="submit"
+                      disabled={submitting}
+                      className="w-full gradient-electric text-white font-bold rounded-xl py-3 text-base glow-blue hover:opacity-90 transition-opacity"
+                    >
+                      {submitting ? (
+                        <div className="h-5 w-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                      ) : (
+                        <>
+                          Secure My Spot
+                          <Sparkles className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </div>

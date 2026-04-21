@@ -16,14 +16,19 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import { getActiveWebinar, registerForWebinar } from "@/app/dashboard/admin/actions";
 
 // ─── Twitch Configuration ────────────────────────────────────────
 // Swap this with your real Twitch channel name
 const TWITCH_CHANNEL = "beyondintern";
 
-const WEBINAR_DATE = new Date("2026-03-29T14:00:00Z");
-
-
+interface ActiveWebinar {
+  id: string;
+  title: string;
+  speaker: string | null;
+  webinar_date: string | null;
+  webinar_time: string | null;
+}
 
 function getWebinarStatus(date: Date): { label: string; color: string; dotColor: string; animate: boolean } {
   const now = new Date();
@@ -41,6 +46,30 @@ function getWebinarStatus(date: Date): { label: string; color: string; dotColor:
 
 export default function LiveTheaterPage() {
 
+  // ── Webinar data ──
+  const [webinar, setWebinar] = useState<ActiveWebinar | null>(null);
+
+  useEffect(() => {
+    getActiveWebinar().then((data) => {
+      if (data) setWebinar(data as ActiveWebinar);
+    });
+  }, []);
+
+  // Dynamic values with fallbacks
+  const webinarTitle = webinar?.title || "Boost Your Career & Land Internships";
+  const webinarSpeaker = webinar?.speaker || "Nandani Sharma";
+  const webinarDate = webinar?.webinar_date || "29th March 2026";
+  const webinarTime = webinar?.webinar_time || "7:00 PM IST";
+
+  // Derive status date from webinar_date field (best-effort)
+  const statusDate = useMemo(() => {
+    if (webinar?.webinar_date) {
+      const parsed = new Date(webinar.webinar_date);
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+    return new Date("2026-03-29T14:00:00Z");
+  }, [webinar]);
+
   // ── Stream state ──
   const [isStreaming, setIsStreaming] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
@@ -49,8 +78,10 @@ export default function LiveTheaterPage() {
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [registered, setRegistered] = useState(false);
+  const [regSubmitting, setRegSubmitting] = useState(false);
+  const [regError, setRegError] = useState("");
 
-  const status = useMemo(() => getWebinarStatus(WEBINAR_DATE), []);
+  const status = useMemo(() => getWebinarStatus(statusDate), [statusDate]);
 
   // ── Organic Viewer Count Fluctuation ──
   useEffect(() => {
@@ -95,12 +126,22 @@ export default function LiveTheaterPage() {
 
 
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regName.trim() || !regEmail.trim()) return;
-    setRegistered(true);
-    setRegName("");
-    setRegEmail("");
+    setRegSubmitting(true);
+    setRegError("");
+
+    const result = await registerForWebinar({ full_name: regName, email: regEmail });
+    setRegSubmitting(false);
+
+    if (result.success) {
+      setRegistered(true);
+      setRegName("");
+      setRegEmail("");
+    } else {
+      setRegError((result as { message?: string }).message || "Registration failed.");
+    }
   };
 
   return (
@@ -152,7 +193,7 @@ export default function LiveTheaterPage() {
         {/* Left: Video */}
         <div className="flex-1 flex flex-col items-center justify-center">
           {/* Webinar title */}
-          <motion.div
+            <motion.div
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-6"
@@ -160,11 +201,11 @@ export default function LiveTheaterPage() {
             <div className="inline-flex items-center gap-2 bg-electric/10 border border-electric/20 rounded-full px-4 py-1.5 mb-3">
               <Radio className="h-3.5 w-3.5 text-electric-light animate-pulse" />
               <span className="text-electric-light text-xs font-semibold">
-                Boost Your Career &amp; Land Internships · 29th March 2026
+                {webinarTitle} · {webinarDate}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">
-              Speaker: <span className="gradient-text">Nandani Sharma</span>
+              Speaker: <span className="gradient-text">{webinarSpeaker}</span>
             </h1>
           </motion.div>
 
@@ -302,11 +343,11 @@ export default function LiveTheaterPage() {
             <div className="flex items-center gap-4 mb-6 text-sm text-slate-300">
               <span className="flex items-center gap-1.5">
                 <Calendar className="h-4 w-4 text-electric-light" />
-                29 Mar 2026
+                {webinarDate}
               </span>
               <span className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-electric-light" />
-                2:00 PM GMT
+                {webinarTime}
               </span>
             </div>
 
@@ -358,11 +399,25 @@ export default function LiveTheaterPage() {
                       className="w-full h-10 pl-10 pr-4 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-slate-500 focus:border-electric/50 focus:outline-none transition-colors"
                     />
                   </div>
+                  {regError && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2"
+                    >
+                      {regError}
+                    </motion.p>
+                  )}
                   <Button
                     type="submit"
+                    disabled={regSubmitting}
                     className="w-full h-10 gradient-electric text-white font-semibold rounded-xl text-sm glow-blue hover:opacity-90 transition-opacity"
                   >
-                    Reserve My Seat
+                    {regSubmitting ? (
+                      <div className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                    ) : (
+                      "Reserve My Seat"
+                    )}
                   </Button>
                   <p className="text-[10px] text-slate-600 text-center">
                     Free registration. No credit card required.

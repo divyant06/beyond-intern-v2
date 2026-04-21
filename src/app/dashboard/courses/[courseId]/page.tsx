@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
 import {
   ArrowLeft,
@@ -21,6 +21,7 @@ import {
   GraduationCap,
   Sparkles,
   Layers,
+  ChevronDown,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -278,6 +279,9 @@ export default function CourseVideoPage() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [curriculum, setCurriculum] = useState<string | null>(null);
+
+  // ── Curriculum accordion state ──
+  const [curriculumOpen, setCurriculumOpen] = useState(false);
 
   // Supabase client for curriculum fetch
   const supabaseRef = useRef(
@@ -596,6 +600,76 @@ export default function CourseVideoPage() {
                 {richDesc}
               </p>
             </div>
+
+            {/* ── Curriculum Accordion ──────────────────────────────────── */}
+            {curriculum && (
+              <div className="border-t border-white/5 pt-6">
+                <button
+                  type="button"
+                  onClick={() => setCurriculumOpen((o) => !o)}
+                  className="group w-full flex items-center justify-between rounded-xl px-5 py-4 bg-white/4 hover:bg-white/7 border border-white/8 hover:border-electric/30 transition-all"
+                >
+                  <span className="flex items-center gap-2.5 text-sm font-semibold text-white">
+                    <Layers className="h-4 w-4 text-electric-light" />
+                    View Course Curriculum
+                    <span className="text-xs font-medium text-slate-500">
+                      ({curriculum.split("\n").filter(Boolean).length} modules)
+                    </span>
+                  </span>
+                  <motion.span
+                    animate={{ rotate: curriculumOpen ? 180 : 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="text-slate-400 group-hover:text-electric-light transition-colors"
+                  >
+                    <ChevronDown className="h-5 w-5" />
+                  </motion.span>
+                </button>
+
+                <AnimatePresence initial={false}>
+                  {curriculumOpen && (
+                    <motion.div
+                      key="curriculum"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.35, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-4 relative pl-8">
+                        {/* Vertical timeline line */}
+                        <div className="absolute left-[11px] top-2 bottom-2 w-px bg-linear-to-b from-electric/60 via-electric/30 to-transparent" />
+                        {curriculum.split("\n").filter(Boolean).map((module, i, arr) => (
+                          <motion.div
+                            key={i}
+                            initial={{ opacity: 0, x: -12 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.06 }}
+                            className={`relative flex items-start gap-4 ${i < arr.length - 1 ? "pb-5" : ""}`}
+                          >
+                            {/* Glowing dot */}
+                            <div className="absolute -left-8 top-1 flex items-center justify-center">
+                              <span className="h-[22px] w-[22px] rounded-full bg-electric/10 border border-electric/30 flex items-center justify-center">
+                                <span className="h-2.5 w-2.5 rounded-full bg-electric glow-blue" />
+                              </span>
+                            </div>
+                            {/* Module text */}
+                            <div className="flex-1">
+                              <p className="text-sm text-slate-300 leading-relaxed">
+                                {module.trim()}
+                              </p>
+                            </div>
+                            {/* Step number */}
+                            <span className="text-[10px] font-bold text-slate-600 shrink-0 mt-0.5">
+                              {String(i + 1).padStart(2, "0")}
+                            </span>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {/* Outcomes */}
             {richOutcomes.length > 0 && (
