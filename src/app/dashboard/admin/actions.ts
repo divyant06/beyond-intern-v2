@@ -59,6 +59,7 @@ export async function upsertCourse(formData: FormData) {
     const duration = formData.get("duration") as string;
     const level = formData.get("level") as string;
     const outcomes = formData.get("outcomes") as string;
+    const price = formData.get("price") as string | null;
     let image_url = formData.get("image_url") as string | null;
     const curriculum = formData.get("curriculum") as string | null;
     const file = formData.get("image") as File | null;
@@ -96,6 +97,7 @@ export async function upsertCourse(formData: FormData) {
         duration: duration.trim(),
         level: level.trim(),
         outcomes: outcomes.trim(),
+        price: (price || "").trim() || null,
         image_url: (image_url || "").trim() || null,
         curriculum: (curriculum || "").trim() || null,
       },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, Search, ChevronDown, LogOut, BookOpen } from "lucide-react";
+import { Bell, Search, ChevronDown, LogOut, BookOpen, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import Link from "next/link";
 import { fetchAllCourses } from "@/app/dashboard/admin/actions";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function TopHeader() {
+export function TopHeader({ onMenuClick }: { onMenuClick?: () => void }) {
   const { data: session } = useSession();
   const user = session?.user;
   const displayName = user?.name || user?.email?.split("@")[0] || "Student";
@@ -46,7 +46,16 @@ export function TopHeader() {
     : allCourses.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/5 bg-navy/80 backdrop-blur-xl px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/5 bg-navy/80 backdrop-blur-xl px-4 md:px-6">
+      {/* Hamburger — mobile only */}
+      <button
+        onClick={onMenuClick}
+        className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors mr-2"
+        aria-label="Open menu"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
       {/* Search */}
       <div className="relative max-w-md flex-1" ref={searchRef}>
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />

@@ -53,6 +53,7 @@ interface RawCourse {
   duration: string;
   level: string;
   outcomes: string;
+  price?: string | null;
   image_url?: string;
   curriculum?: string;
   created_at?: string;
@@ -106,6 +107,7 @@ export default function AdminPage() {
     duration: "",
     level: "",
     outcomes: "",
+    price: "",
     image_url: "",
     curriculum: "",
     image_file: null as File | null,
@@ -217,6 +219,7 @@ export default function AdminPage() {
     formData.append("duration", courseForm.duration);
     formData.append("level", courseForm.level);
     formData.append("outcomes", courseForm.outcomes);
+    formData.append("price", courseForm.price);
     formData.append("image_url", courseForm.image_url);
     formData.append("curriculum", courseForm.curriculum);
     
@@ -230,7 +233,7 @@ export default function AdminPage() {
         editingCourse ? "Course updated successfully!" : "Course published successfully!"
       );
       setCourseStatus("success");
-      setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", image_url: "", curriculum: "", image_file: null });
+      setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", price: "", image_url: "", curriculum: "", image_file: null });
       setEditingCourse(null);
       loadCourses();
     } else {
@@ -256,6 +259,7 @@ export default function AdminPage() {
       duration: course.duration,
       level: course.level,
       outcomes: course.outcomes,
+      price: course.price || "",
       image_url: course.image_url || "",
       curriculum: course.curriculum || "",
       image_file: null,
@@ -574,6 +578,16 @@ export default function AdminPage() {
                 </div>
 
                 <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Price</label>
+                  <Input
+                    placeholder='e.g. £650 or "Free"'
+                    value={courseForm.price}
+                    onChange={(e) => setCourseForm({ ...courseForm, price: e.target.value })}
+                    className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-electric/50 rounded-xl"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
                   <label className="text-sm font-medium text-slate-300">Outcomes (one per line)</label>
                   <textarea
                     placeholder={"Junior Developer\nBackend Engineer\nAutomation Specialist"}
@@ -642,7 +656,7 @@ export default function AdminPage() {
                       type="button"
                       onClick={() => {
                         setEditingCourse(null);
-                        setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", image_url: "", curriculum: "", image_file: null });
+                        setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", price: "", image_url: "", curriculum: "", image_file: null });
                       }}
                       className="h-11 bg-white/5 border border-white/10 text-slate-300 rounded-xl hover:bg-white/10"
                     >

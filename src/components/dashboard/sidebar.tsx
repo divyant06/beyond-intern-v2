@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,63 +14,47 @@ import {
   ChevronRight,
   Bell,
   LogOut,
+  X,
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { signOut } from "next-auth/react";
 
 const navItems = [
-  {
-    icon: Home,
-    label: "Dashboard",
-    href: "/dashboard",
-    tooltip: "Main dashboard overview",
-  },
-  {
-    icon: BookOpen,
-    label: "My Courses",
-    href: "/dashboard/courses",
-    tooltip: "View enrolled courses",
-  },
-  {
-    icon: Trophy,
-    label: "Achievements",
-    href: "/dashboard/achievements",
-    tooltip: "Your milestones & badges",
-  },
-  {
-    icon: BadgeCheck,
-    label: "Certifications",
-    href: "/dashboard/certifications",
-    tooltip: "Download certificates",
-  },
-  {
-    icon: Bell,
-    label: "Notifications",
-    href: "/dashboard/notifications",
-    tooltip: "Alerts & updates",
-  },
-  {
-    icon: Settings,
-    label: "Settings",
-    href: "/dashboard/settings",
-    tooltip: "Account & preferences",
-  },
+  { icon: Home, label: "Dashboard", href: "/dashboard", tooltip: "Main dashboard overview" },
+  { icon: BookOpen, label: "My Courses", href: "/dashboard/courses", tooltip: "View enrolled courses" },
+  { icon: Trophy, label: "Achievements", href: "/dashboard/achievements", tooltip: "Your milestones & badges" },
+  { icon: BadgeCheck, label: "Certifications", href: "/dashboard/certifications", tooltip: "Download certificates" },
+  { icon: Bell, label: "Notifications", href: "/dashboard/notifications", tooltip: "Alerts & updates" },
+  { icon: Settings, label: "Settings", href: "/dashboard/settings", tooltip: "Account & preferences" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}
+
+export function Sidebar({ mobileOpen, onMobileClose }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
-  return (
-    <motion.aside
-      animate={{ width: collapsed ? 72 : 256 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="sticky top-0 h-screen shrink-0 z-40 flex flex-col border-r border-white/5 bg-navy-light/95 backdrop-blur-xl"
-    >
+  // Auto-close mobile sidebar on route change
+  useEffect(() => {
+    onMobileClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  const navContent = (isMobile: boolean) => (
+    <>
       {/* Logo */}
-      <Link href="/" className={`flex items-center px-4 h-16 overflow-hidden ${collapsed ? "justify-center" : "gap-2"}`}>
+      <Link
+        href="/"
+        className={`flex items-center px-4 h-16 overflow-hidden ${
+          !isMobile && collapsed ? "justify-center" : "gap-2"
+        }`}
+        onClick={isMobile ? onMobileClose : undefined}
+      >
         <AnimatePresence>
-          {!collapsed ? (
+          {(!collapsed || isMobile) ? (
             <motion.span
               key="full-logo"
               initial={{ opacity: 0, width: 0 }}
@@ -92,34 +76,52 @@ export function Sidebar() {
             </motion.span>
           )}
         </AnimatePresence>
+
+        {/* Close button (mobile only) */}
+        {isMobile && (
+          <button
+            onClick={(e) => { e.preventDefault(); onMobileClose(); }}
+            className="ml-auto p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Close sidebar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </Link>
 
       <Separator className="bg-white/5" />
 
       {/* Nav items */}
-      <nav className={`flex-1 flex flex-col px-3 py-4 space-y-1 overflow-y-auto ${collapsed ? "items-center" : ""}`}>
+      <nav
+        className={`flex-1 flex flex-col px-3 py-4 space-y-1 overflow-y-auto ${
+          !isMobile && collapsed ? "items-center" : ""
+        }`}
+      >
         {navItems.map((item) => {
           const isActive =
             item.href === "/dashboard"
               ? pathname === "/dashboard"
               : pathname.startsWith(item.href);
           return (
-            <Link key={item.label} href={item.href} title={collapsed ? item.tooltip : undefined}>
+            <Link
+              key={item.label}
+              href={item.href}
+              title={!isMobile && collapsed ? item.tooltip : undefined}
+              onClick={isMobile ? onMobileClose : undefined}
+            >
               <motion.div
-                whileHover={{ x: collapsed ? 0 : 2 }}
+                whileHover={{ x: (!isMobile && collapsed) ? 0 : 2 }}
                 className={`flex items-center rounded-xl py-2.5 text-sm font-medium transition-all cursor-pointer ${
-                  collapsed ? "justify-center w-11 px-0" : "gap-3 px-3"
+                  !isMobile && collapsed ? "justify-center w-11 px-0" : "gap-3 px-3"
                 } ${
                   isActive
                     ? "bg-electric/10 text-electric-light"
                     : "text-slate-400 hover:bg-white/5 hover:text-white"
                 }`}
               >
-                <item.icon
-                  className={`h-5 w-5 shrink-0 ${isActive ? "text-electric-light" : ""}`}
-                />
+                <item.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-electric-light" : ""}`} />
                 <AnimatePresence>
-                  {!collapsed && (
+                  {(isMobile || !collapsed) && (
                     <motion.span
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -130,7 +132,7 @@ export function Sidebar() {
                     </motion.span>
                   )}
                 </AnimatePresence>
-                {isActive && !collapsed && (
+                {isActive && (isMobile || !collapsed) && (
                   <motion.div
                     layoutId="activeIndicator"
                     className="ml-auto h-1.5 w-1.5 rounded-full bg-electric-light"
@@ -151,12 +153,8 @@ export function Sidebar() {
         >
           <LogOut className="h-5 w-5 shrink-0" />
           <AnimatePresence>
-            {!collapsed && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
+            {(isMobile || !collapsed) && (
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 Sign Out
               </motion.span>
             )}
@@ -164,18 +162,54 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-navy-light text-slate-400 hover:text-white transition-colors"
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+      {/* Desktop collapse toggle */}
+      {!isMobile && (
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-navy-light text-slate-400 hover:text-white transition-colors"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+        </button>
+      )}
+    </>
+  );
+
+  return (
+    <>
+      {/* ── Desktop Sidebar ─────────────────────────────────── */}
+      <motion.aside
+        animate={{ width: collapsed ? 72 : 256 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="hidden md:sticky md:flex md:top-0 md:h-screen md:shrink-0 md:z-40 md:flex-col border-r border-white/5 bg-navy-light/95 backdrop-blur-xl relative"
       >
-        {collapsed ? (
-          <ChevronRight className="h-3 w-3" />
-        ) : (
-          <ChevronLeft className="h-3 w-3" />
+        {navContent(false)}
+      </motion.aside>
+
+      {/* ── Mobile Overlay ───────────────────────────────────── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            key="overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+            onClick={onMobileClose}
+          />
         )}
-      </button>
-    </motion.aside>
+      </AnimatePresence>
+
+      {/* ── Mobile Off-Canvas Drawer ─────────────────────────── */}
+      <motion.aside
+        initial={false}
+        animate={{ x: mobileOpen ? 0 : "-100%" }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="fixed top-0 left-0 h-full w-64 z-50 flex flex-col border-r border-white/5 bg-navy-light/98 backdrop-blur-xl md:hidden"
+      >
+        {navContent(true)}
+      </motion.aside>
+    </>
   );
 }

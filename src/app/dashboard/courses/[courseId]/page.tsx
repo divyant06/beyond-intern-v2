@@ -279,6 +279,7 @@ export default function CourseVideoPage() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const [curriculum, setCurriculum] = useState<string | null>(null);
+  const [dbPrice, setDbPrice] = useState<string | null>(null);
 
   // ── Curriculum accordion state ──
   const [curriculumOpen, setCurriculumOpen] = useState(false);
@@ -300,13 +301,14 @@ export default function CourseVideoPage() {
       try {
         const courses = await getUserCourses(session.user.email);
         setIsEnrolled(courses.some((c: { course_id: string }) => c.course_id === courseId));
-        // Also fetch curriculum from raw_courses
+        // Also fetch curriculum + price from raw_courses
         const { data: dbCourse } = await supabaseRef.current
           .from("raw_courses")
-          .select("curriculum")
+          .select("curriculum, price")
           .eq("id", courseId)
           .single();
         if (dbCourse?.curriculum) setCurriculum(dbCourse.curriculum);
+        if (dbCourse?.price) setDbPrice(dbCourse.price);
       } catch {
         setIsEnrolled(false);
       } finally {
@@ -442,7 +444,7 @@ export default function CourseVideoPage() {
           {course && <p className="mt-1 text-sm text-slate-400">{course.category} · {course.duration} · {course.level}</p>}
         </div>
         <div ref={playerWrapperRef} className="glass-card rounded-2xl flex flex-col overflow-hidden bg-navy border border-white/10 shadow-2xl">
-          <div className="relative w-full aspect-video bg-black group">
+          <div className="relative w-full max-w-full aspect-video bg-black group overflow-hidden">
             <div ref={containerRef} className="absolute inset-0 w-full h-full" />
             <div className="absolute inset-0 z-10 cursor-pointer" onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} />
           </div>
@@ -576,18 +578,18 @@ export default function CourseVideoPage() {
                   {course.weeklyCommitment} / week
                 </span>
               )}
-              {course?.price !== undefined && course?.price !== null && (
-                <span className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-amber-400" />
-                  £{course.price}
+              {/* Price: prefer DB value, then fallback to course.price */}
+              {(dbPrice || course?.price) ? (
+                <span className="flex items-center gap-2 text-amber-400 font-semibold">
+                  <Sparkles className="h-4 w-4" />
+                  {dbPrice || `£${course!.price}`}
                 </span>
-              )}
-              {course?.price === null && (
+              ) : course?.price === null ? (
                 <span className="flex items-center gap-2 text-emerald-400 font-medium">
                   <Sparkles className="h-4 w-4" />
                   Complimentary
                 </span>
-              )}
+              ) : null}
             </div>
 
             {/* Description */}

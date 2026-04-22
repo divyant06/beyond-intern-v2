@@ -24,6 +24,7 @@ interface DbCourse {
   duration: string;
   level: string;
   outcomes: string;
+  price?: string | null;
   image_url?: string | null;
   curriculum?: string | null;
   created_at?: string;
@@ -153,6 +154,11 @@ function CourseCard({ course, index }: { course: DbCourse; index: number }) {
             <BookOpen className="h-3.5 w-3.5" />
             {course.level}
           </span>
+          {course.price && (
+            <span className="flex items-center gap-1 ml-auto font-semibold text-amber-400">
+              {course.price}
+            </span>
+          )}
         </div>
 
         {/* Career outcomes */}
