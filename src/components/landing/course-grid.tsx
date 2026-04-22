@@ -154,11 +154,6 @@ function CourseCard({ course, index }: { course: DbCourse; index: number }) {
             <BookOpen className="h-3.5 w-3.5" />
             {course.level}
           </span>
-          {course.price && (
-            <span className="flex items-center gap-1 ml-auto font-semibold text-amber-400">
-              {course.price}
-            </span>
-          )}
         </div>
 
         {/* Career outcomes */}
@@ -174,7 +169,10 @@ function CourseCard({ course, index }: { course: DbCourse; index: number }) {
         </div>
 
         {/* CTA */}
-        <div className="mt-auto pt-4 flex items-center justify-end border-t border-white/5">
+        <div className="mt-auto pt-4 flex items-center justify-between border-t border-slate-800">
+          <span className="text-xl font-bold text-white">
+            {course.price || 'Free'}
+          </span>
           <Link href={`/dashboard/courses/${course.id}`}>
             <Button
               size="sm"
