@@ -93,7 +93,6 @@ const ALL_CATEGORIES = [
 // ── Card ───────────────────────────────────────────────────────────────────────
 function CourseCard({ course, index }: { course: DbCourse; index: number }) {
   const config = categoryConfig[course.category] ?? categoryConfig["Technical Skills"];
-  const imageUrl = course.image_url || config.fallbackImage;
   const outcomesList = course.outcomes ? course.outcomes.split("\n").filter(Boolean) : [];
 
   return (
@@ -109,17 +108,30 @@ function CourseCard({ course, index }: { course: DbCourse; index: number }) {
       <div
         className={`relative h-44 bg-linear-to-br ${config.gradient} flex items-center justify-center overflow-hidden`}
       >
-        <Image
-          src={imageUrl}
-          alt={course.title}
-          fill
-          className="object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
-        <div className="absolute inset-0 bg-navy/50" />
-        <span className="relative z-10 text-5xl opacity-30">
-          {config.icon}
-        </span>
+        {course.image_url ? (
+          <Image
+            src={course.image_url}
+            alt={course.title}
+            fill
+            unoptimized={true}
+            className="object-cover group-hover:scale-105 transition-transform duration-700"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <>
+            <Image
+              src={config.fallbackImage}
+              alt={course.title}
+              fill
+              className="object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+            <div className="absolute inset-0 bg-navy/50" />
+            <span className="relative z-10 text-5xl opacity-30">
+              {config.icon}
+            </span>
+          </>
+        )}
 
         {/* Category badge */}
         <div className="absolute top-3 left-3 z-10">
