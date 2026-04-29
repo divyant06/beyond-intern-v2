@@ -146,9 +146,9 @@ export default function CoursesPage() {
                 </span>
 
                 <div className="flex-1">
-                  <h2 className="text-base font-semibold text-white leading-snug group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-base font-semibold text-white leading-snug group-hover:text-blue-400 transition-colors">
                     {course!.title}
-                  </h2>
+                  </h3>
                   <p className="mt-1.5 text-sm text-slate-400 line-clamp-2">
                     {course!.description}
                   </p>

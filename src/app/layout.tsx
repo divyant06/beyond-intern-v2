@@ -19,6 +19,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.beyondintern.com"),
   title: {
     default: "Beyond Intern — Premium EdTech Platform",
     template: "%s | Beyond Intern",
@@ -33,19 +34,32 @@ export const metadata: Metadata = {
     "career growth",
     "Beyond Intern",
   ],
+  alternates: {
+    canonical: "https://www.beyondintern.com",
+  },
   openGraph: {
     type: "website",
     locale: "en_GB",
+    url: "https://www.beyondintern.com",
     title: "Beyond Intern — Premium EdTech Platform",
     description:
       "Level up your career with industry-leading courses, live webinars, and mentorship.",
     siteName: "Beyond Intern",
+    images: [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: "Beyond Intern — Premium EdTech Platform",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Beyond Intern — Premium EdTech Platform",
     description:
       "Level up your career with industry-leading courses, live webinars, and mentorship.",
+    images: ["/og-default.png"],
   },
   icons: {
     icon: "/logo-transparent.png.png",

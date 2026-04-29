@@ -111,7 +111,7 @@ function CourseCard({ course, index }: { course: DbCourse; index: number }) {
         {course.image_url ? (
           <Image
             src={course.image_url}
-            alt={course.title}
+            alt={`${course.title} — ${course.category} course cover graphic on Beyond Intern`}
             fill
             unoptimized={true}
             className="object-cover group-hover:scale-105 transition-transform duration-700"
@@ -121,7 +121,7 @@ function CourseCard({ course, index }: { course: DbCourse; index: number }) {
           <>
             <Image
               src={config.fallbackImage}
-              alt={course.title}
+              alt={`${course.title} — ${course.category} course illustration`}
               fill
               className="object-cover opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-700"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
