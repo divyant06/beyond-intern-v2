@@ -30,8 +30,9 @@ export function CourseVideoClient({ courseId, initialCourse }: { courseId: strin
   const [curriculumOpen, setCurriculumOpen] = useState(false);
   const [openWeeks, setOpenWeeks] = useState<Record<string, boolean>>({});
 
-  const modules: Module[] = initialCourse?.curriculum || [];
-  const firstVideoId = modules.length > 0 && modules[0].youtube_ids?.length > 0
+  const parsedCurriculum = Array.isArray(initialCourse?.curriculum) ? initialCourse.curriculum : [];
+  const modules: Module[] = parsedCurriculum;
+  const firstVideoId = modules.length > 0 && modules[0]?.youtube_ids?.length > 0
     ? modules[0].youtube_ids[0]
     : "dQw4w9WgXcQ"; // Fallback placeholder if entirely empty
 
@@ -221,9 +222,18 @@ export function CourseVideoClient({ courseId, initialCourse }: { courseId: strin
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           <div className="col-span-1 lg:col-span-2 space-y-6">
             <div ref={playerWrapperRef} className="glass-card rounded-2xl flex flex-col overflow-hidden bg-navy border border-white/10 shadow-2xl">
-              <div className="relative w-full max-w-full aspect-video bg-black overflow-hidden">
-                <div ref={containerRef} className="absolute inset-0 w-full h-full" />
-                <div className="absolute inset-0 z-10 cursor-pointer" onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} />
+              <div className="relative w-full max-w-full aspect-video bg-black overflow-hidden flex items-center justify-center">
+                {modules.length > 0 ? (
+                  <>
+                    <div ref={containerRef} className="absolute inset-0 w-full h-full" />
+                    <div className="absolute inset-0 z-10 cursor-pointer" onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} />
+                  </>
+                ) : (
+                  <div className="text-slate-400 flex flex-col items-center gap-2">
+                    <Play className="h-10 w-10 opacity-50" />
+                    <p className="font-medium text-sm">No video available.</p>
+                  </div>
+                )}
               </div>
               <div className="w-full h-2 bg-white/10 cursor-pointer relative hover:h-3 transition-all" onClick={handleTimelineClick}>
                 <motion.div className="absolute top-0 left-0 h-full bg-linear-to-r from-electric to-electric-light" style={{ width: `${progress}%` }} transition={{ duration: 0.1 }} />
@@ -319,7 +329,9 @@ export function CourseVideoClient({ courseId, initialCourse }: { courseId: strin
                   </div>
                 ))}
                 {modules.length === 0 && (
-                  <p className="text-sm text-slate-400 italic">No curriculum available.</p>
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
+                    <p className="text-sm font-medium text-slate-300">Course modules are currently being updated.</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -366,45 +378,51 @@ export function CourseVideoClient({ courseId, initialCourse }: { courseId: strin
               <p className="text-slate-400 leading-relaxed text-sm sm:text-base">{richDesc}</p>
             </div>
             
-            {modules.length > 0 && (
-              <div className="border-t border-white/5 pt-6">
-                <button type="button" onClick={() => setCurriculumOpen((o) => !o)}
-                  className="group w-full flex items-center justify-between rounded-xl px-5 py-4 bg-white/4 hover:bg-white/7 border border-white/8 hover:border-electric/30 transition-all">
-                  <span className="flex items-center gap-2.5 text-sm font-semibold text-white">
-                    <Layers className="h-4 w-4 text-electric-light" />
-                    View Course Curriculum
-                    <span className="text-xs font-medium text-slate-500">({modules.length} modules)</span>
-                  </span>
-                  <motion.span animate={{ rotate: curriculumOpen ? 180 : 0 }} transition={{ duration: 0.25 }} className="text-slate-400 group-hover:text-electric-light transition-colors">
-                    <ChevronDown className="h-5 w-5" />
-                  </motion.span>
-                </button>
-                <AnimatePresence initial={false}>
-                  {curriculumOpen && (
-                    <motion.div key="curriculum" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.35, ease: "easeInOut" }} className="overflow-hidden">
-                      <div className="mt-4 relative pl-8">
-                        <div className="absolute left-[11px] top-2 bottom-2 w-px bg-linear-to-b from-electric/60 via-electric/30 to-transparent" />
-                        {modules.map((module, i, arr) => (
-                          <motion.div key={module.id} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
-                            className={`relative flex items-start gap-4 ${i < arr.length - 1 ? "pb-5" : ""}`}>
-                            <div className="absolute -left-8 top-1 flex items-center justify-center">
-                              <span className="h-[22px] w-[22px] rounded-full bg-electric/10 border border-electric/30 flex items-center justify-center">
-                                <span className="h-2.5 w-2.5 rounded-full bg-electric glow-blue" />
-                              </span>
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-semibold text-white leading-relaxed">{module.title}</p>
-                              <p className="text-xs text-slate-400 mt-1">{module.month_group} • {module.weeks}</p>
-                            </div>
-                            <span className="text-[10px] font-bold text-slate-600 shrink-0 mt-0.5">{String(i + 1).padStart(2, "0")}</span>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
+            <div className="border-t border-white/5 pt-6">
+              {modules.length === 0 ? (
+                <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
+                  <p className="text-sm font-medium text-slate-300">Course modules are currently being updated.</p>
+                </div>
+              ) : (
+                <>
+                  <button type="button" onClick={() => setCurriculumOpen((o) => !o)}
+                    className="group w-full flex items-center justify-between rounded-xl px-5 py-4 bg-white/4 hover:bg-white/7 border border-white/8 hover:border-electric/30 transition-all">
+                    <span className="flex items-center gap-2.5 text-sm font-semibold text-white">
+                      <Layers className="h-4 w-4 text-electric-light" />
+                      View Course Curriculum
+                      <span className="text-xs font-medium text-slate-500">({modules.length} modules)</span>
+                    </span>
+                    <motion.span animate={{ rotate: curriculumOpen ? 180 : 0 }} transition={{ duration: 0.25 }} className="text-slate-400 group-hover:text-electric-light transition-colors">
+                      <ChevronDown className="h-5 w-5" />
+                    </motion.span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {curriculumOpen && (
+                      <motion.div key="curriculum" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.35, ease: "easeInOut" }} className="overflow-hidden">
+                        <div className="mt-4 relative pl-8">
+                          <div className="absolute left-[11px] top-2 bottom-2 w-px bg-linear-to-b from-electric/60 via-electric/30 to-transparent" />
+                          {modules.map((module, i, arr) => (
+                            <motion.div key={module.id} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
+                              className={`relative flex items-start gap-4 ${i < arr.length - 1 ? "pb-5" : ""}`}>
+                              <div className="absolute -left-8 top-1 flex items-center justify-center">
+                                <span className="h-[22px] w-[22px] rounded-full bg-electric/10 border border-electric/30 flex items-center justify-center">
+                                  <span className="h-2.5 w-2.5 rounded-full bg-electric glow-blue" />
+                                </span>
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-white leading-relaxed">{module.title}</p>
+                                <p className="text-xs text-slate-400 mt-1">{module.month_group} • {module.weeks}</p>
+                              </div>
+                              <span className="text-[10px] font-bold text-slate-600 shrink-0 mt-0.5">{String(i + 1).padStart(2, "0")}</span>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              )}
+            </div>
             
             <div className="border-t border-white/5 pt-6">
               {renderOutcomes()}

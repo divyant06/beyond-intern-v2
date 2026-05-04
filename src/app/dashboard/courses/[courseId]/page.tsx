@@ -70,6 +70,10 @@ export default async function CourseVideoPage({ params }: PageProps) {
     .eq("id", courseId)
     .single();
 
+  if (course) {
+    course.curriculum = Array.isArray(course.curriculum) ? course.curriculum : [];
+  }
+
   let numericPrice = "0";
   if (course?.price) {
     const stripped = String(course.price).replace(/[^\d.]/g, '');
