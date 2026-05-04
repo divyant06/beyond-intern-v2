@@ -13,12 +13,20 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { courseData } from "@/lib/courses";
 import { getUserCourses } from "./actions";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface UserCourse {
-  course_id: string;
-  created_at: string;
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  duration: string;
+  level: string;
+  enrolledAt: string;
+  [key: string]: unknown;
 }
 
 export default function CoursesPage() {
@@ -49,14 +57,8 @@ export default function CoursesPage() {
     }
   }, [session, status]);
 
-  // BULLETPROOF MAPPING - Prevents React from crashing if a course ID is invalid
-  const enrolledCourseDetails = userCourses
-    .map((uc) => {
-      const course = courseData.find((c) => c.id === uc.course_id);
-      if (!course) return null; 
-      return { ...course, enrolledAt: uc.created_at };
-    })
-    .filter(Boolean);
+  // BULLETPROOF MAPPING - Now uses live data directly from Supabase
+  const enrolledCourseDetails = userCourses;
 
   if (isLoading || status === "loading") {
     return (

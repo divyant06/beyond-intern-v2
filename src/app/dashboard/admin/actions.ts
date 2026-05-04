@@ -62,6 +62,13 @@ export async function upsertCourse(formData: FormData) {
     const price = formData.get("price") as string | null;
     let image_url = formData.get("image_url") as string | null;
     const curriculum = formData.get("curriculum") as string | null;
+    
+    // New fields
+    const career_outcomes = formData.get("career_outcomes") as string | null;
+    const prerequisites = formData.get("prerequisites") as string | null;
+    const faqs = formData.get("faqs") as string | null;
+    const schedule = formData.get("schedule") as string | null;
+
     const file = formData.get("image") as File | null;
 
     if (file && file.size > 0) {
@@ -88,6 +95,15 @@ export async function upsertCourse(formData: FormData) {
       image_url = publicUrl;
     }
 
+    const safeParse = (val: string | null, fallback: unknown) => {
+      if (!val) return fallback;
+      try {
+        return JSON.parse(val);
+      } catch {
+        return fallback;
+      }
+    };
+
     const { error } = await supabaseAdmin.from("raw_courses").upsert(
       {
         id,
@@ -99,7 +115,11 @@ export async function upsertCourse(formData: FormData) {
         outcomes: outcomes.trim(),
         price: (price || "").trim() || null,
         image_url: (image_url || "").trim() || null,
-        curriculum: (curriculum || "").trim() || null,
+        curriculum: safeParse(curriculum, []),
+        career_outcomes: safeParse(career_outcomes, []),
+        prerequisites: (prerequisites || "").trim() || null,
+        faqs: safeParse(faqs, []),
+        schedule: safeParse(schedule, {}),
       },
       { onConflict: "id" }
     );

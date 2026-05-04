@@ -62,5 +62,47 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CourseVideoPage({ params }: PageProps) {
   const { courseId } = await params;
-  return <CourseVideoClient courseId={courseId} />;
+
+  const { data: course } = await supabase
+    .from("raw_courses")
+    .select("id, title, description, price")
+    .eq("id", courseId)
+    .single();
+
+  let numericPrice = "0";
+  if (course?.price) {
+    const stripped = String(course.price).replace(/[^\d.]/g, '');
+    if (stripped) {
+      numericPrice = stripped;
+    }
+  }
+
+  const jsonLd = course ? {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: course.title,
+    description: course.description || "",
+    provider: {
+      "@type": "Organization",
+      name: "Beyond Intern",
+      url: "https://www.beyondintern.com"
+    },
+    offers: {
+      "@type": "Offer",
+      price: numericPrice,
+      priceCurrency: "GBP"
+    }
+  } : null;
+
+  return (
+    <>
+      {jsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
+      <CourseVideoClient courseId={courseId} />
+    </>
+  );
 }

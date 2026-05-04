@@ -1,3 +1,21 @@
+import { createClient } from "@supabase/supabase-js";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+export interface Module {
+  id: string;
+  title: string;
+  month_group: string;
+  weeks: string;
+  youtube_ids: string[];
+}
+
+export interface FAQ {
+  question: string;
+  answer: string;
+}
+
 export interface Course {
   id: string;
   title: string;
@@ -8,13 +26,47 @@ export interface Course {
     | "Professional & Soft Skills"
     | "Finance & Investment"
     | "Creative Skills"
-    | "Career Readiness";
+    | "Career Readiness"
+    | string;
   duration: string;
   price: number | null; // GBP £, null = complimentary with other courses
   level: string;
   weeklyCommitment: string;
   description: string;
   outcomes: string[];
+  image_url?: string;
+  curriculum?: Module[];
+  career_outcomes?: string[];
+  prerequisites?: string;
+  faqs?: FAQ[];
+  schedule?: Record<string, unknown>;
+}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+// Ensure we create a fresh client
+export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: (url, options) => {
+      return fetch(url, { ...options, cache: "no-store" });
+    },
+  },
+});
+
+export async function fetchLiveCourses(): Promise<Course[]> {
+  try {
+    const { data, error } = await supabaseClient
+      .from("raw_courses")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching live courses:", error);
+    return [];
+  }
 }
 
 export const courseData: Course[] = [
