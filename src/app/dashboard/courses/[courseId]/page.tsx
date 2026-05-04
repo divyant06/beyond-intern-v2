@@ -66,7 +66,7 @@ export default async function CourseVideoPage({ params }: PageProps) {
 
   const { data: course } = await supabase
     .from("raw_courses")
-    .select("id, title, description, price")
+    .select("id, title, description, price, curriculum, career_outcomes, schedule, category, level, duration")
     .eq("id", courseId)
     .single();
 
@@ -103,7 +103,7 @@ export default async function CourseVideoPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <CourseVideoClient courseId={courseId} />
+      <CourseVideoClient courseId={courseId} initialCourse={course} />
     </>
   );
 }
