@@ -1,8 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 export interface Module {
   id: string;
   title: string;

@@ -15,9 +15,6 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { getUserCourses } from "./actions";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 interface UserCourse {
   id: string;
   title: string;

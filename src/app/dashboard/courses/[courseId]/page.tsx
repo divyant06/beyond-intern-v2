@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+export const dynamic = "force-dynamic";
 import { createClient } from "@supabase/supabase-js";
 import { CourseVideoClient } from "./CourseVideoClient";
 
