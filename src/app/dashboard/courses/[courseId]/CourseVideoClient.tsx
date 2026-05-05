@@ -79,11 +79,21 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
   const [playbackRate, setPlaybackRate] = useState(1);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
+  const isFirstLoad = useRef(true);
+
   const initPlayer = useCallback(() => {
     if (!containerRef.current) return;
     playerRef.current = new window.YT.Player(containerRef.current, {
       videoId: currentVideoId,
-      playerVars: { controls: 0, disablekb: 1, rel: 0, modestbranding: 1, fs: 0, iv_load_policy: 3 },
+      playerVars: { 
+        controls: 0, 
+        disablekb: 1, 
+        rel: 0, 
+        modestbranding: 1, 
+        fs: 0, 
+        iv_load_policy: 3,
+        autoplay: 0 
+      },
       events: {
         onReady: () => setPlayerReady(true),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -109,8 +119,14 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
 
   useEffect(() => {
     if (playerReady && playerRef.current && window.YT && window.YT.PlayerState) {
-      playerRef.current.loadVideoById(currentVideoId);
-      setIsPlaying(true);
+      if (isFirstLoad.current) {
+        playerRef.current.cueVideoById(currentVideoId);
+        isFirstLoad.current = false;
+        setIsPlaying(false);
+      } else {
+        playerRef.current.loadVideoById(currentVideoId);
+        setIsPlaying(true);
+      }
     }
   }, [currentVideoId, playerReady]);
 
@@ -403,7 +419,7 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
         </div>
 
         {/* Bottom Row 2: Assignment Submission — always shown */}
-        <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg bg-gradient-to-r from-purple-500/10 to-transparent">
+        <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg bg-linear-to-r from-purple-500/10 to-transparent">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
