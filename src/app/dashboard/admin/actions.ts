@@ -1,13 +1,7 @@
 "use server";
 
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { courseData } from "@/lib/courses";
-
-// We use the Service Role Key here to bypass RLS and force the course assignment
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // ── Static image map for migration ─────────────────────────────────────────────
 const CATEGORY_IMAGES: Record<string, string> = {
