@@ -45,6 +45,14 @@ const ADMIN_EMAILS = ["info@beyondintern.com", "ansupoddar11@gmail.com"];
 type Status = "idle" | "loading" | "success" | "error";
 type Tab = "enrol" | "courses" | "analytics" | "webinars" | "notifications";
 
+interface Module {
+  id: string;
+  title: string;
+  month_group: string;
+  weeks: string;
+  youtube_ids: string[];
+}
+
 interface RawCourse {
   id: string;
   title: string;
@@ -55,7 +63,7 @@ interface RawCourse {
   outcomes: string;
   price?: string | null;
   image_url?: string;
-  curriculum?: string;
+  curriculum?: Module[] | string;
   created_at?: string;
 }
 
@@ -109,7 +117,7 @@ export default function AdminPage() {
     outcomes: "",
     price: "",
     image_url: "",
-    curriculum: "",
+    curriculum: [] as Module[],
     image_file: null as File | null,
   });
   const [migrateStatus, setMigrateStatus] = useState<Status>("idle");
@@ -221,7 +229,7 @@ export default function AdminPage() {
     formData.append("outcomes", courseForm.outcomes);
     formData.append("price", courseForm.price);
     formData.append("image_url", courseForm.image_url);
-    formData.append("curriculum", courseForm.curriculum);
+    formData.append("curriculum", JSON.stringify(courseForm.curriculum));
     
     if (courseForm.image_file) {
       formData.append("image", courseForm.image_file);
@@ -233,7 +241,7 @@ export default function AdminPage() {
         editingCourse ? "Course updated successfully!" : "Course published successfully!"
       );
       setCourseStatus("success");
-      setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", price: "", image_url: "", curriculum: "", image_file: null });
+      setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", price: "", image_url: "", curriculum: [] as Module[], image_file: null });
       setEditingCourse(null);
       loadCourses();
     } else {
@@ -251,6 +259,17 @@ export default function AdminPage() {
 
   // ── Edit Prefill ──
   function handleEditCourse(course: RawCourse) {
+    let parsedCurriculum: Module[] = [];
+    if (typeof course.curriculum === "string") {
+      try {
+        parsedCurriculum = JSON.parse(course.curriculum);
+      } catch {
+        parsedCurriculum = [];
+      }
+    } else if (Array.isArray(course.curriculum)) {
+      parsedCurriculum = course.curriculum;
+    }
+
     setCourseForm({
       id: course.id,
       title: course.title,
@@ -261,7 +280,7 @@ export default function AdminPage() {
       outcomes: course.outcomes,
       price: course.price || "",
       image_url: course.image_url || "",
-      curriculum: course.curriculum || "",
+      curriculum: parsedCurriculum,
       image_file: null,
     });
     setEditingCourse(course.id);
@@ -611,15 +630,130 @@ export default function AdminPage() {
                   )}
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-300">Curriculum (one module per line)</label>
-                  <textarea
-                    placeholder={"Week 1-2: Foundations\nWeek 3-4: Core Skills\nWeek 5-8: Advanced Topics\nWeek 9-12: Capstone Project"}
-                    value={courseForm.curriculum}
-                    onChange={(e) => setCourseForm({ ...courseForm, curriculum: e.target.value })}
-                    rows={5}
-                    className="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-3 text-sm focus:outline-none focus:border-electric/50 transition-colors placeholder:text-white/40 resize-none"
-                  />
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-slate-300">Curriculum Modules</label>
+                    <Button
+                      type="button"
+                      onClick={() => setCourseForm({
+                        ...courseForm,
+                        curriculum: [...courseForm.curriculum, { id: crypto.randomUUID(), title: "", month_group: "", weeks: "", youtube_ids: [] }]
+                      })}
+                      className="h-8 px-3 text-xs bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10"
+                    >
+                      <PlusCircle className="mr-1.5 h-3 w-3" /> Add Module
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {courseForm.curriculum.map((mod: Module, mIndex: number) => (
+                      <div key={mod.id} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3 relative group">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newCurriculum = [...courseForm.curriculum];
+                            newCurriculum.splice(mIndex, 1);
+                            setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                          }}
+                          className="absolute top-3 right-3 p-1.5 rounded-md text-rose-400 hover:bg-rose-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pr-8">
+                          <div className="space-y-1">
+                            <label className="text-xs text-slate-400">Title</label>
+                            <Input 
+                              placeholder="e.g. Introduction to React"
+                              value={mod.title}
+                              onChange={(e) => {
+                                const newCurriculum = [...courseForm.curriculum];
+                                newCurriculum[mIndex].title = e.target.value;
+                                setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                              }}
+                              className="h-9 bg-white/5 border-white/10 text-white text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-slate-400">Month Group</label>
+                            <Input 
+                              placeholder="e.g. Month 1"
+                              value={mod.month_group}
+                              onChange={(e) => {
+                                const newCurriculum = [...courseForm.curriculum];
+                                newCurriculum[mIndex].month_group = e.target.value;
+                                setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                              }}
+                              className="h-9 bg-white/5 border-white/10 text-white text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-slate-400">Weeks</label>
+                            <Input 
+                              placeholder="e.g. Week 1-2"
+                              value={mod.weeks}
+                              onChange={(e) => {
+                                const newCurriculum = [...courseForm.curriculum];
+                                newCurriculum[mIndex].weeks = e.target.value;
+                                setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                              }}
+                              className="h-9 bg-white/5 border-white/10 text-white text-sm"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2 pt-2 border-t border-white/10">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-medium text-slate-400">YouTube IDs</label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newCurriculum = [...courseForm.curriculum];
+                                newCurriculum[mIndex].youtube_ids.push("");
+                                setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                              }}
+                              className="text-xs text-electric hover:text-electric-light flex items-center"
+                            >
+                              <PlusCircle className="h-3 w-3 mr-1" /> Add ID
+                            </button>
+                          </div>
+                          {mod.youtube_ids.map((yId, yIndex) => (
+                            <div key={yIndex} className="flex items-center gap-2">
+                              <Input 
+                                placeholder="e.g. dQw4w9WgXcQ"
+                                value={yId}
+                                onChange={(e) => {
+                                  const newCurriculum = [...courseForm.curriculum];
+                                  newCurriculum[mIndex].youtube_ids[yIndex] = e.target.value;
+                                  setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                                }}
+                                className="h-8 bg-white/5 border-white/10 text-white text-xs flex-1"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newCurriculum = [...courseForm.curriculum];
+                                  newCurriculum[mIndex].youtube_ids.splice(yIndex, 1);
+                                  setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-400/10 rounded"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                          {mod.youtube_ids.length === 0 && (
+                            <p className="text-xs text-slate-500 italic">No videos added yet.</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {courseForm.curriculum.length === 0 && (
+                      <div className="p-6 rounded-xl border border-dashed border-white/20 text-center">
+                        <p className="text-sm text-slate-400">No modules added yet.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {courseStatus !== "idle" && courseStatus !== "loading" && (
@@ -656,7 +790,7 @@ export default function AdminPage() {
                       type="button"
                       onClick={() => {
                         setEditingCourse(null);
-                        setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", price: "", image_url: "", curriculum: "", image_file: null });
+                        setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", price: "", image_url: "", curriculum: [] as Module[], image_file: null });
                       }}
                       className="h-11 bg-white/5 border border-white/10 text-slate-300 rounded-xl hover:bg-white/10"
                     >

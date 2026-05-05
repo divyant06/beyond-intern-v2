@@ -62,7 +62,7 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
         day: "numeric",
         year: "numeric"
       }).format(new Date(review.created_at));
-    } catch (e) {
+    } catch {
       formattedDate = "Recent";
     }
   }
