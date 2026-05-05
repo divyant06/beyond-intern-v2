@@ -47,3 +47,20 @@ export async function getUserCourses(email: string) {
     return [];
   }
 }
+
+export async function checkEnrollment(email: string, courseId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("user_courses")
+      .select("course_id")
+      .eq("user_email", email)
+      .eq("course_id", courseId)
+      .limit(1);
+
+    if (error) throw error;
+    return data && data.length > 0;
+  } catch (error) {
+    console.error("Check enrollment error:", error);
+    return false;
+  }
+}

@@ -8,8 +8,6 @@ import {
   BookOpen, GraduationCap, Sparkles, Layers, ChevronDown, Calendar
 } from "lucide-react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
-import { getUserCourses } from "../actions";
 import { Module } from "@/lib/courses";
 
 declare global {
@@ -21,12 +19,11 @@ declare global {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function CourseVideoClient({ courseId, initialCourse }: { courseId: string; initialCourse?: any }) {
-  const { data: session, status: authStatus } = useSession();
+export function CourseVideoClient({ courseId, initialCourse, serverIsEnrolled = false }: { courseId: string; initialCourse?: any; serverIsEnrolled?: boolean }) {
   const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
 
-  const [isEnrolled, setIsEnrolled] = useState(false);
-  const [checkingEnrollment, setCheckingEnrollment] = useState(true);
+  const isEnrolled = serverIsEnrolled;
+  const checkingEnrollment = false;
   const [curriculumOpen, setCurriculumOpen] = useState(false);
   const [openWeeks, setOpenWeeks] = useState<Record<string, boolean>>({});
 
@@ -37,21 +34,6 @@ export function CourseVideoClient({ courseId, initialCourse }: { courseId: strin
     : "dQw4w9WgXcQ"; // Fallback placeholder if entirely empty
 
   const [currentVideoId, setCurrentVideoId] = useState<string>(firstVideoId);
-
-  useEffect(() => {
-    async function check() {
-      if (!session?.user?.email) { setCheckingEnrollment(false); return; }
-      try {
-        const courses = await getUserCourses(session.user.email);
-        setIsEnrolled(courses.some((c: { course_id: string }) => c.course_id === courseId));
-      } catch { 
-        setIsEnrolled(false); 
-      } finally { 
-        setCheckingEnrollment(false); 
-      }
-    }
-    if (authStatus !== "loading") check();
-  }, [session, authStatus, courseId]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const playerRef = useRef<any>(null);
@@ -199,13 +181,6 @@ export function CourseVideoClient({ courseId, initialCourse }: { courseId: strin
     );
   };
 
-  if (checkingEnrollment || authStatus === "loading") {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="h-8 w-8 rounded-full border-2 border-electric/30 border-t-electric animate-spin" />
-      </div>
-    );
-  }
 
   // ── ENROLLED: video player ────────────────────────────────────────────────
   if (isEnrolled) {

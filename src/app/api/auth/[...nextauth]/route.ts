@@ -12,7 +12,9 @@ const adapter =
       })
     : undefined;
 
-const handler = NextAuth({
+import { NextAuthOptions } from "next-auth";
+
+export const authOptions: NextAuthOptions = {
   ...(adapter ? { adapter } : {}),
   providers: [
     GoogleProvider({
@@ -64,7 +66,9 @@ const handler = NextAuth({
     },
   },
   secret: process.env.NEXTAUTH_SECRET || "beyond-intern-dev-secret-key",
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
 

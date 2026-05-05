@@ -61,6 +61,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { checkEnrollment } from "../actions";
+
 export default async function CourseVideoPage({ params }: PageProps) {
   const { courseId } = await params;
 
@@ -72,6 +76,12 @@ export default async function CourseVideoPage({ params }: PageProps) {
 
   if (course) {
     course.curriculum = Array.isArray(course.curriculum) ? course.curriculum : [];
+  }
+
+  const session = await getServerSession(authOptions);
+  let isEnrolled = false;
+  if (session?.user?.email) {
+    isEnrolled = await checkEnrollment(session.user.email, courseId);
   }
 
   let numericPrice = "0";
@@ -107,7 +117,7 @@ export default async function CourseVideoPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <CourseVideoClient courseId={courseId} initialCourse={course} />
+      <CourseVideoClient courseId={courseId} initialCourse={course} serverIsEnrolled={isEnrolled} />
     </>
   );
 }
