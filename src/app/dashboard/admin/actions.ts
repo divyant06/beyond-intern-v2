@@ -407,3 +407,157 @@ export async function fetchNotifications(userEmail: string) {
     return [];
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── Collaborations & Press Management ────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Carousel Images ───────────────────────────────────────────────────────────
+
+export interface CarouselImageRow {
+  id: string;
+  image_url: string;
+  orientation: "landscape" | "portrait";
+  created_at: string;
+}
+
+export async function fetchCarouselImages(): Promise<CarouselImageRow[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("carousel_images")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as CarouselImageRow[];
+  } catch (error) {
+    console.error("Fetch carousel images error:", error);
+    return [];
+  }
+}
+
+export async function insertCarouselImage(image_url: string, orientation: "landscape" | "portrait") {
+  try {
+    const { error } = await supabaseAdmin
+      .from("carousel_images")
+      .insert({ image_url: image_url.trim(), orientation });
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Insert carousel image error:", error);
+    return { success: false, message: "Failed to add carousel image." };
+  }
+}
+
+export async function deleteCarouselImage(id: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from("carousel_images")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Delete carousel image error:", error);
+    return { success: false, message: "Failed to delete carousel image." };
+  }
+}
+
+// ── Brand Partners ────────────────────────────────────────────────────────────
+
+export interface BrandPartnerRow {
+  id: string;
+  name: string;
+  website_link: string;
+  created_at: string;
+}
+
+export async function fetchBrandPartners(): Promise<BrandPartnerRow[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("brand_partners")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as BrandPartnerRow[];
+  } catch (error) {
+    console.error("Fetch brand partners error:", error);
+    return [];
+  }
+}
+
+export async function insertBrandPartner(name: string, website_link: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from("brand_partners")
+      .insert({ name: name.trim(), website_link: website_link.trim() });
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Insert brand partner error:", error);
+    return { success: false, message: "Failed to add brand partner." };
+  }
+}
+
+export async function deleteBrandPartner(id: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from("brand_partners")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Delete brand partner error:", error);
+    return { success: false, message: "Failed to delete brand partner." };
+  }
+}
+
+// ── Press Articles ────────────────────────────────────────────────────────────
+
+export interface PressArticleRow {
+  id: string;
+  publisher_name: string;
+  article_link: string;
+  created_at: string;
+}
+
+export async function fetchPressArticles(): Promise<PressArticleRow[]> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("press_articles")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as PressArticleRow[];
+  } catch (error) {
+    console.error("Fetch press articles error:", error);
+    return [];
+  }
+}
+
+export async function insertPressArticle(publisher_name: string, article_link: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from("press_articles")
+      .insert({ publisher_name: publisher_name.trim(), article_link: article_link.trim() });
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Insert press article error:", error);
+    return { success: false, message: "Failed to add press article." };
+  }
+}
+
+export async function deletePressArticle(id: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from("press_articles")
+      .delete()
+      .eq("id", id);
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error("Delete press article error:", error);
+    return { success: false, message: "Failed to delete press article." };
+  }
+}

@@ -17,6 +17,7 @@ const navLinks = [
   { name: "Webinars", href: "/#webinars" },
   { name: "About", href: "/about" },
   { name: "Blog", href: "/blog" },
+  { name: "Associations", href: "/collaborations" },
   { name: "Contact", href: "/contact" },
 ];
 

@@ -21,6 +21,11 @@ import {
   Mic,
   Mail,
   Bell,
+  Handshake,
+  ImageIcon,
+  Globe,
+  Newspaper,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,12 +43,22 @@ import {
   getActiveWebinar,
   getWebinarRegistrations,
   sendNotification,
+  fetchCarouselImages,
+  insertCarouselImage,
+  deleteCarouselImage,
+  fetchBrandPartners,
+  insertBrandPartner,
+  deleteBrandPartner,
+  fetchPressArticles,
+  insertPressArticle,
+  deletePressArticle,
 } from "./actions";
+import type { CarouselImageRow, BrandPartnerRow, PressArticleRow } from "./actions";
 
 const ADMIN_EMAILS = ["info@beyondintern.com", "ansupoddar11@gmail.com"];
 
 type Status = "idle" | "loading" | "success" | "error";
-type Tab = "enrol" | "courses" | "analytics" | "webinars" | "notifications";
+type Tab = "enrol" | "courses" | "analytics" | "webinars" | "notifications" | "collabs";
 
 interface VideoModule {
   id: string;
@@ -159,6 +174,19 @@ export default function AdminPage() {
   const [notifStatus, setNotifStatus] = useState<Status>("idle");
   const [notifMsg, setNotifMsg] = useState("");
 
+  // ── Collaborations & Press State ──
+  const [carouselImages, setCarouselImages] = useState<CarouselImageRow[]>([]);
+  const [carouselUrl, setCarouselUrl] = useState("");
+  const [carouselOrientation, setCarouselOrientation] = useState<"landscape" | "portrait">("landscape");
+  const [brandPartners, setBrandPartners] = useState<BrandPartnerRow[]>([]);
+  const [brandName, setBrandName] = useState("");
+  const [brandLink, setBrandLink] = useState("");
+  const [pressArticles, setPressArticles] = useState<PressArticleRow[]>([]);
+  const [pressPublisher, setPressPublisher] = useState("");
+  const [pressLink, setPressLink] = useState("");
+  const [collabStatus, setCollabStatus] = useState<Status>("idle");
+  const [collabMsg, setCollabMsg] = useState("");
+
   const isAdmin =
     session?.user?.email && ADMIN_EMAILS.includes(session.user.email);
 
@@ -190,6 +218,17 @@ export default function AdminPage() {
     setWebinarRegs(regs as WebinarReg[]);
   }, []);
 
+  const loadCollabs = useCallback(async () => {
+    const [images, brands, press] = await Promise.all([
+      fetchCarouselImages(),
+      fetchBrandPartners(),
+      fetchPressArticles(),
+    ]);
+    setCarouselImages(images);
+    setBrandPartners(brands);
+    setPressArticles(press);
+  }, []);
+
   useEffect(() => {
     if (!isAdmin) return;
     // Invoke via .then() so setState is never called synchronously in the
@@ -197,6 +236,7 @@ export default function AdminPage() {
     loadCourses();
     loadAnalytics();
     loadWebinar();
+    loadCollabs();
     // loadCourses/loadAnalytics/loadWebinar are stable (empty deps) — safe to omit from
     // deps array, or include — either way there is no cascading render because
     // state is set inside an async callback, not synchronously.
@@ -387,6 +427,73 @@ export default function AdminPage() {
     }
   }
 
+  // ── Collab Handlers ──
+  async function handleAddCarouselImage() {
+    if (!carouselUrl.trim()) return;
+    setCollabStatus("loading");
+    const result = await insertCarouselImage(carouselUrl, carouselOrientation);
+    if (result.success) {
+      setCarouselUrl("");
+      setCarouselOrientation("landscape");
+      setCollabMsg("Carousel image added!");
+      setCollabStatus("success");
+      loadCollabs();
+    } else {
+      setCollabMsg(result.message || "Failed.");
+      setCollabStatus("error");
+    }
+  }
+
+  async function handleDeleteCarouselImage(id: string) {
+    if (!confirm("Delete this carousel image?")) return;
+    await deleteCarouselImage(id);
+    loadCollabs();
+  }
+
+  async function handleAddBrand() {
+    if (!brandName.trim() || !brandLink.trim()) return;
+    setCollabStatus("loading");
+    const result = await insertBrandPartner(brandName, brandLink);
+    if (result.success) {
+      setBrandName("");
+      setBrandLink("");
+      setCollabMsg("Brand partner added!");
+      setCollabStatus("success");
+      loadCollabs();
+    } else {
+      setCollabMsg(result.message || "Failed.");
+      setCollabStatus("error");
+    }
+  }
+
+  async function handleDeleteBrand(id: string) {
+    if (!confirm("Remove this brand partner?")) return;
+    await deleteBrandPartner(id);
+    loadCollabs();
+  }
+
+  async function handleAddPress() {
+    if (!pressPublisher.trim() || !pressLink.trim()) return;
+    setCollabStatus("loading");
+    const result = await insertPressArticle(pressPublisher, pressLink);
+    if (result.success) {
+      setPressPublisher("");
+      setPressLink("");
+      setCollabMsg("Press article added!");
+      setCollabStatus("success");
+      loadCollabs();
+    } else {
+      setCollabMsg(result.message || "Failed.");
+      setCollabStatus("error");
+    }
+  }
+
+  async function handleDeletePress(id: string) {
+    if (!confirm("Remove this press article?")) return;
+    await deletePressArticle(id);
+    loadCollabs();
+  }
+
   /* Loading skeleton */
   if (status === "loading") {
     return (
@@ -421,6 +528,7 @@ export default function AdminPage() {
     { key: "analytics", label: "Analytics", icon: <BarChart3 className="h-4 w-4" /> },
     { key: "webinars", label: "Manage Webinars", icon: <Radio className="h-4 w-4" /> },
     { key: "notifications", label: "Notifications", icon: <Bell className="h-4 w-4" /> },
+    { key: "collabs", label: "Collabs & Press", icon: <Handshake className="h-4 w-4" /> },
   ];
 
   return (
@@ -1337,6 +1445,208 @@ export default function AdminPage() {
                   )}
                 </Button>
               </form>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ════════════════════ TAB 6: COLLABORATIONS & PRESS ═══════════════ */}
+        {activeTab === "collabs" && (
+          <motion.div key="collabs" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="space-y-8">
+            <div>
+              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                <Handshake className="h-6 w-6 text-electric-light" />
+                Manage Collaborations & Press
+              </h1>
+              <p className="mt-1 text-sm text-slate-400">
+                Manage carousel images, brand partners, and press coverage for the Collaborations page.
+              </p>
+            </div>
+
+            {/* Status toast */}
+            {collabStatus !== "idle" && collabStatus !== "loading" && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`p-4 rounded-xl flex items-start gap-3 text-sm ${
+                  collabStatus === "success"
+                    ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300"
+                    : "bg-rose-500/10 border border-rose-500/20 text-rose-300"
+                }`}
+              >
+                {collabStatus === "success" ? <CheckCircle className="h-4 w-4 mt-0.5" /> : <AlertCircle className="h-4 w-4 mt-0.5" />}
+                {collabMsg}
+              </motion.div>
+            )}
+
+            {/* ── 1. Carousel Manager ─────────────────────────────────────── */}
+            <div className="glass-card rounded-2xl p-8 space-y-6">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-purple-400" />
+                Carousel Images
+                <span className="ml-1 text-xs font-medium px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                  {carouselImages.length}
+                </span>
+              </h2>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  placeholder="Image URL (e.g. https://...)"
+                  value={carouselUrl}
+                  onChange={(e) => setCarouselUrl(e.target.value)}
+                  className="flex-1 h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                />
+                <select
+                  value={carouselOrientation}
+                  onChange={(e) => setCarouselOrientation(e.target.value as "landscape" | "portrait")}
+                  className="h-11 rounded-xl bg-white/5 border border-white/10 text-white px-3 text-sm focus:outline-none focus:border-electric/50"
+                >
+                  <option value="landscape" className="bg-slate-900">Landscape</option>
+                  <option value="portrait" className="bg-slate-900">Portrait</option>
+                </select>
+                <Button
+                  type="button"
+                  onClick={handleAddCarouselImage}
+                  disabled={collabStatus === "loading" || !carouselUrl.trim()}
+                  className="h-11 px-6 gradient-electric text-white font-semibold rounded-xl glow-blue hover:opacity-90 transition-opacity shrink-0"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add Image
+                </Button>
+              </div>
+
+              {carouselImages.length === 0 ? (
+                <p className="text-sm text-slate-500 text-center py-4">No carousel images yet.</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                  {carouselImages.map((img) => (
+                    <div key={img.id} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/3 hover:bg-white/6 transition-colors gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-slate-300 truncate font-mono">{img.image_url}</p>
+                        <span className="text-[10px] text-slate-500 uppercase tracking-wider">{img.orientation}</span>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteCarouselImage(img.id)}
+                        className="p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* ── 2. Brand Partners Manager ────────────────────────────────── */}
+            <div className="glass-card rounded-2xl p-8 space-y-6">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Globe className="h-5 w-5 text-cyan-400" />
+                Brand Partners
+                <span className="ml-1 text-xs font-medium px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                  {brandPartners.length}
+                </span>
+              </h2>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  placeholder="Brand name (e.g. Google)"
+                  value={brandName}
+                  onChange={(e) => setBrandName(e.target.value)}
+                  className="flex-1 h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                />
+                <Input
+                  placeholder="https://apple.com"
+                  value={brandLink}
+                  onChange={(e) => setBrandLink(e.target.value)}
+                  className="flex-1 h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddBrand}
+                  disabled={collabStatus === "loading" || !brandName.trim() || !brandLink.trim()}
+                  className="h-11 px-6 gradient-electric text-white font-semibold rounded-xl glow-blue hover:opacity-90 transition-opacity shrink-0"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add Brand
+                </Button>
+              </div>
+
+              {brandPartners.length === 0 ? (
+                <p className="text-sm text-slate-500 text-center py-4">No brand partners yet.</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                  {brandPartners.map((bp) => (
+                    <div key={bp.id} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/3 hover:bg-white/6 transition-colors gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white font-medium">{bp.name}</p>
+                        <a href={bp.website_link} target="_blank" rel="noopener noreferrer" className="text-xs text-electric-light hover:underline flex items-center gap-1 mt-0.5">
+                          {bp.website_link} <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteBrand(bp.id)}
+                        className="p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* ── 3. Press Articles Manager ────────────────────────────────── */}
+            <div className="glass-card rounded-2xl p-8 space-y-6">
+              <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Newspaper className="h-5 w-5 text-amber-400" />
+                Press Articles
+                <span className="ml-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                  {pressArticles.length}
+                </span>
+              </h2>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  placeholder="Publisher name (e.g. TechCrunch)"
+                  value={pressPublisher}
+                  onChange={(e) => setPressPublisher(e.target.value)}
+                  className="flex-1 h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                />
+                <Input
+                  placeholder="https://techcrunch.com/article-url"
+                  value={pressLink}
+                  onChange={(e) => setPressLink(e.target.value)}
+                  className="flex-1 h-11 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-electric/50 rounded-xl"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddPress}
+                  disabled={collabStatus === "loading" || !pressPublisher.trim() || !pressLink.trim()}
+                  className="h-11 px-6 gradient-electric text-white font-semibold rounded-xl glow-blue hover:opacity-90 transition-opacity shrink-0"
+                >
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add Press
+                </Button>
+              </div>
+
+              {pressArticles.length === 0 ? (
+                <p className="text-sm text-slate-500 text-center py-4">No press articles yet.</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                  {pressArticles.map((pa) => (
+                    <div key={pa.id} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/3 hover:bg-white/6 transition-colors gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white font-medium">{pa.publisher_name}</p>
+                        <a href={pa.article_link} target="_blank" rel="noopener noreferrer" className="text-xs text-electric-light hover:underline flex items-center gap-1 mt-0.5">
+                          {pa.article_link} <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                      <button
+                        onClick={() => handleDeletePress(pa.id)}
+                        className="p-2 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </motion.div>
         )}
