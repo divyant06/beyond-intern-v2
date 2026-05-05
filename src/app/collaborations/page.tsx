@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-import { ExternalLink } from "lucide-react";
+import { BrandLogo } from "./brand-logo";
+import { PressWall } from "./press-wall";
 import {
   fetchCarouselImages,
   fetchBrandPartners,
@@ -141,19 +142,7 @@ export default async function CollaborationsPage() {
                       rel="noopener noreferrer"
                       className="glass-card rounded-2xl p-6 flex flex-col items-center justify-center gap-4 text-center group hover:bg-white/5 hover:-translate-y-1 transition-all duration-300 border border-white/10"
                     >
-                      {/* Clearbit logo with initial-letter fallback */}
-                      <div className="relative h-12 w-12 rounded-lg bg-white shadow-md flex items-center justify-center overflow-hidden">
-                        <span className="text-lg font-bold text-slate-400 select-none">
-                          {bp.name.charAt(0).toUpperCase()}
-                        </span>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={`https://logo.clearbit.com/${domain}`}
-                          alt={`${bp.name} logo`}
-                          className="absolute inset-0 h-full w-full object-contain p-1.5"
-                          loading="lazy"
-                        />
-                      </div>
+                      <BrandLogo domain={domain} brandName={bp.name} />
                       <span className="text-sm font-semibold text-white group-hover:text-electric-light transition-colors">
                         {bp.name}
                       </span>
@@ -181,20 +170,7 @@ export default async function CollaborationsPage() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-3">
-                {pressArticles.map((pa: PressArticleRow) => (
-                  <a
-                    key={pa.id}
-                    href={pa.article_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/5 border border-white/10 text-sm text-slate-300 font-medium hover:bg-electric/10 hover:border-electric/30 hover:text-white transition-all duration-200 group"
-                  >
-                    {pa.publisher_name}
-                    <ExternalLink className="h-3.5 w-3.5 text-slate-500 group-hover:text-electric-light transition-colors shrink-0" />
-                  </a>
-                ))}
-              </div>
+              <PressWall articles={pressArticles} />
             </div>
           </section>
         )}
