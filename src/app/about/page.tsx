@@ -206,17 +206,15 @@ export default function AboutPage() {
 
         {/* ── Middle Section Image ─────────────────────────────────────── */}
         <section className="relative py-12">
-          <div className="mx-auto max-w-4xl px-6 lg:px-8">
-            <div className="relative aspect-Video w-full rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(37,99,235,0.15)] border border-white/10 group">
-              <Image
-                src="/About-1.png"
-                alt="Beyond Intern Students and Team"
-                fill
-                className="object-cover transition-transform duration-700 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, 800px"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-navy/80 via-transparent to-transparent opacity-80" />
-            </div>
+          <div className="mt-16 w-full max-w-5xl mx-auto px-4 group">
+            <Image 
+              src="/About-1.png" 
+              alt="Beyond Intern Vision" 
+              width={1200} 
+              height={600} 
+              className="w-full h-auto rounded-2xl shadow-[0_0_40px_rgba(37,99,235,0.15)] border border-white/10 transition-transform duration-700 group-hover:scale-[1.02]" 
+              priority
+            />
           </div>
         </section>
 
