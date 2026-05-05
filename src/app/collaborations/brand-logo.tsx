@@ -3,11 +3,11 @@
 import { useState } from "react";
 
 interface BrandLogoProps {
-  domain: string;
+  logoUrl?: string;
   brandName: string;
 }
 
-export function BrandLogo({ domain, brandName }: BrandLogoProps) {
+export function BrandLogo({ logoUrl, brandName }: BrandLogoProps) {
   const [hasError, setHasError] = useState(false);
   
   // First two initials (e.g. Apple -> Ap, LinkedIn -> Li)
@@ -22,11 +22,11 @@ export function BrandLogo({ domain, brandName }: BrandLogoProps) {
         </span>
       </div>
 
-      {/* Main Clearbit Logo (hides on error) */}
-      {!hasError && (
+      {/* Main Database Logo (hides on error or if missing) */}
+      {!hasError && logoUrl && (
         /* eslint-disable-next-line @next/next/no-img-element */
         <img
-          src={`https://logo.clearbit.com/${domain}`}
+          src={logoUrl}
           alt={`${brandName} logo`}
           className="absolute inset-0 h-full w-full object-contain p-1.5 bg-white z-10"
           loading="lazy"

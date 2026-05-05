@@ -21,19 +21,6 @@ export const metadata = {
     "Explore Beyond Intern's global brand partnerships, media presence, and press coverage driving career transformation worldwide.",
 };
 
-/* ── Helper: extract clean domain from a URL ─────────────────────────── */
-function extractDomain(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    // fallback: strip protocol and www manually
-    return url
-      .replace(/^https?:\/\//, "")
-      .replace(/^www\./, "")
-      .split("/")[0];
-  }
-}
-
 /* ══════════════════════════════════════════════════════════════════════ */
 export default async function CollaborationsPage() {
   const [carouselImages, brandPartners, pressArticles] = await Promise.all([
@@ -132,9 +119,7 @@ export default async function CollaborationsPage() {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-                {brandPartners.map((bp: BrandPartnerRow) => {
-                  const domain = extractDomain(bp.website_link);
-                  return (
+                {brandPartners.map((bp: BrandPartnerRow) => (
                     <a
                       key={bp.id}
                       href={bp.website_link}
@@ -142,13 +127,12 @@ export default async function CollaborationsPage() {
                       rel="noopener noreferrer"
                       className="glass-card rounded-2xl p-6 flex flex-col items-center justify-center gap-4 text-center group hover:bg-white/5 hover:-translate-y-1 transition-all duration-300 border border-white/10"
                     >
-                      <BrandLogo domain={domain} brandName={bp.name} />
+                      <BrandLogo logoUrl={bp.logo_url} brandName={bp.name} />
                       <span className="text-sm font-semibold text-white group-hover:text-electric-light transition-colors">
                         {bp.name}
                       </span>
                     </a>
-                  );
-                })}
+                ))}
               </div>
             </div>
           </section>

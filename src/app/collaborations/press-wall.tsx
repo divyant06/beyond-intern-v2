@@ -28,15 +28,24 @@ export function PressWall({ articles }: { articles: PressArticleRow[] }) {
         ))}
       </div>
 
-      {/* Load More Button */}
-      {hasMore && (
+      {/* Pagination Controls */}
+      {articles.length > 40 && (
         <div className="flex justify-center">
-          <button
-            onClick={() => setVisibleCount((prev) => prev + 40)}
-            className="glass px-6 py-2.5 rounded-full border border-white/10 text-sm font-medium text-slate-300 hover:text-white hover:border-electric/50 hover:bg-white/5 transition-all duration-300"
-          >
-            Load More Articles
-          </button>
+          {hasMore ? (
+            <button
+              onClick={() => setVisibleCount((prev) => prev + 40)}
+              className="glass px-6 py-2.5 rounded-full border border-white/10 text-sm font-medium text-slate-300 hover:text-white hover:border-electric/50 hover:bg-white/5 transition-all duration-300"
+            >
+              Load More Articles
+            </button>
+          ) : (
+            <button
+              onClick={() => setVisibleCount(40)}
+              className="glass px-6 py-2.5 rounded-full border border-white/10 text-sm font-medium text-slate-300 hover:text-white hover:border-electric/50 hover:bg-white/5 transition-all duration-300"
+            >
+              Show Less Articles
+            </button>
+          )}
         </div>
       )}
     </div>

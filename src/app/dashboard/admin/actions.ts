@@ -468,6 +468,7 @@ export interface BrandPartnerRow {
   id: string;
   name: string;
   website_link: string;
+  logo_url?: string;
   created_at: string;
 }
 
