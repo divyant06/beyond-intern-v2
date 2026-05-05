@@ -3,12 +3,8 @@
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import Image from "next/image";
-import { Users, Award, Globe, Zap, Heart, ZoomIn } from "lucide-react";
+import { Users, Award, Globe, Zap, Target, CheckCircle, Rocket, Flag } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-
-// Next.js `metadata` must be in a Server Component, but we need `"use client"` for Dialog.
-// We export it here — it works because Next.js 15 still reads it statically.
-// (If you get a build warning, split this into a server layout wrapper.)
 
 const STATS = [
   { icon: Users, value: "5.5M+", label: "Students Enrolled", color: "text-electric-light" },
@@ -40,116 +36,45 @@ const VALUES = [
   },
 ];
 
-interface Leader {
-  name: string;
-  title: string;
-  role: string;
-  badge: string;
-  accent: string;
-  accentBg: string;
-  accentBorder: string;
-  badgeChar: string;
-  gradient: string;
-  src: string;
-  message: React.ReactNode;
-}
-
-const LEADERS: Leader[] = [
+const LEADERS = [
   {
     name: "Tushar Roy",
     title: "Founder",
     role: "Founder, Beyond Intern",
-    badge: "Message from the Founder",
+    badge: "Visionary",
     accent: "text-electric-light",
     accentBg: "bg-electric/10",
     accentBorder: "border-electric/20",
     badgeChar: "✦",
     gradient: "gradient-electric",
     src: "/Tushar.jpeg",
-    message: (
-      <>
-        <p>
-          Beyond Intern was established with a clear mission: to bridge the gap between academic
-          education and real-world industry requirements. Despite strong academic foundations, many
-          students and early-career professionals struggle to access meaningful opportunities due to
-          limited practical exposure.
-        </p>
-        <p>
-          Recognising this challenge, Beyond Intern was designed as a structured platform that
-          delivers international-standard internships combined with guided coursework and hands-on
-          learning. Our programs focus on building practical skills, professional confidence, and
-          industry readiness across multiple domains.
-        </p>
-        <p className="text-slate-400 text-xs italic">
-          At Beyond Intern, we are committed to empowering learners through experiential education,
-          mentorship, and globally relevant training — ensuring they are prepared to succeed in an
-          evolving professional landscape.
-        </p>
-      </>
-    ),
-  },
-  {
-    name: "Nandani Sharma",
-    title: "Career Counselor & Head Motivator",
-    role: "Career Counselor & Head Motivator, Beyond Intern",
-    badge: "Message from the Career Counselor",
-    accent: "text-emerald",
-    accentBg: "bg-emerald/10",
-    accentBorder: "border-emerald/20",
-    badgeChar: "♥",
-    gradient: "bg-linear-to-br from-emerald to-teal-400",
-    src: "/Nandini.jpeg",
-    message: (
-      <>
-        <p>
-          At Beyond Intern, we believe that every student has the potential to achieve extraordinary
-          success — when guided with the right direction, mindset, and opportunities.
-        </p>
-        <p>
-          As a Career Counselor and Head Motivator, my mission is to empower students to move beyond
-          uncertainty and step confidently into their professional journeys. Through our programs,
-          webinars, and one-to-one guidance, we help students discover their true career path, build
-          industry-relevant skills, and develop the confidence and growth mindset to thrive.
-        </p>
-        <p className="text-slate-400 text-xs italic">
-          Beyond Intern is not just a platform — it&apos;s a transformation journey. Your future
-          starts today. Let&apos;s build it together.
-        </p>
-      </>
-    ),
+    description: "Driving the vision to bridge the gap between academic education and real industry expectations. Tushar established Beyond Intern to create a scalable career acceleration platform that equips students with clarity, competence, and confidence.",
   },
   {
     name: "Swayam Atri",
-    title: "Managing Director",
-    role: "Managing Director, Beyond Intern",
-    badge: "Message from the Managing Director",
+    title: "CEO",
+    role: "Chief Executive Officer",
+    badge: "Leadership",
     accent: "text-gold-light",
     accentBg: "bg-gold/10",
     accentBorder: "border-gold/20",
     badgeChar: "★",
     gradient: "bg-linear-to-br from-gold to-amber-400",
     src: "/Swayam.png",
-    message: (
-      <>
-        <p>
-          At Beyond Intern, our focus is on creating meaningful pathways from education to
-          employment. We recognise that today&apos;s learners require more than theoretical knowledge
-          — they need practical experience, industry alignment, and continuous guidance to succeed in
-          a competitive global environment.
-        </p>
-        <p>
-          As Managing Director, my commitment is to ensure that every program we offer maintains
-          high standards of quality, relevance, and impact. Through structured internships,
-          international-standard coursework, and mentor-led learning, Beyond Intern equips
-          individuals with the skills and confidence required to navigate real-world professional
-          challenges.
-        </p>
-        <p className="text-slate-400 text-xs italic">
-          Our goal is to foster a culture of learning, accountability, and innovation — empowering
-          the next generation of professionals to build sustainable and successful careers.
-        </p>
-      </>
-    ),
+    description: "Ensuring that every program maintains high standards of quality, relevance, and impact. Swayam focuses on creating meaningful pathways from education to employment on a global scale.",
+  },
+  {
+    name: "Adarsh Raj",
+    title: "CSO",
+    role: "Chief Strategy Officer",
+    badge: "Strategy",
+    accent: "text-emerald",
+    accentBg: "bg-emerald/10",
+    accentBorder: "border-emerald/20",
+    badgeChar: "♦",
+    gradient: "bg-linear-to-br from-emerald to-teal-400",
+    src: "/placeholder-avatar.jpg", // Need a placeholder or fallback
+    description: "Spearheading strategic growth and partnerships. Adarsh focuses on aligning our curriculum and mentorship models with the rapidly evolving demands of top-tier industry employers.",
   },
 ];
 
@@ -157,9 +82,9 @@ export default function AboutPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-navy">
+      <main className="min-h-screen bg-navy text-slate-300">
         {/* ── Hero ─────────────────────────────────────────────────────── */}
-        <section className="relative pt-32 pb-24 overflow-hidden">
+        <section className="relative pt-32 pb-16 overflow-hidden">
           <div className="absolute inset-0 gradient-bg" />
           <div className="absolute top-20 left-1/4 h-96 w-96 rounded-full bg-electric/5 blur-[120px]" />
           <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-gold/5 blur-[120px]" />
@@ -179,18 +104,42 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── Stats ────────────────────────────────────────────────────── */}
-        <section className="relative py-16 overflow-hidden">
-          <div className="absolute inset-0 bg-navy-light/40" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
+        {/* ── Founder's Story ──────────────────────────────────────────── */}
+        <section className="relative py-16">
+          <div className="mx-auto max-w-4xl px-6 lg:px-8">
+            <div className="glass-card rounded-3xl p-8 md:p-12 border border-white/10 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-2 h-full gradient-electric" />
+              <div className="prose prose-invert prose-lg max-w-none">
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+                  Beyond Intern: Building Careers Beyond Classrooms
+                </h2>
+                <div className="space-y-6 text-slate-300 leading-relaxed">
+                  <p>
+                    When I founded Beyond Intern at the age of 22, my vision was clear — to bridge the widening gap between academic education and real industry expectations. Each year, countless graduates enter the workforce without practical exposure, structured mentorship, or industry alignment.
+                  </p>
+                  <p>
+                    Beyond Intern was created to address this gap by building a professional ecosystem that connects education with employability. Our objective is not limited to offering courses or internships. We are building a scalable career acceleration platform that equips students with clarity, competence, and confidence before they graduate.
+                  </p>
+                  <p className="text-xl font-medium text-electric-light italic border-l-4 border-electric/30 pl-6 py-2 my-8">
+                    "Beyond Intern represents preparation beyond textbooks, growth beyond limitations, and ambition beyond comfort zones."
+                  </p>
+                  <p className="font-semibold text-white text-right">
+                    — Tushar Roy, Founder
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-          <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+        {/* ── Stats ────────────────────────────────────────────────────── */}
+        <section className="relative py-12 overflow-hidden">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {STATS.map((stat, i) => (
                 <div
                   key={stat.label}
                   className="glass-card rounded-2xl p-7 text-center group hover:glow-blue transition-all duration-300 hover:-translate-y-1"
-                  style={{ animationDelay: `${i * 100}ms` }}
                 >
                   <div className="h-12 w-12 mx-auto rounded-xl gradient-electric flex items-center justify-center mb-4">
                     <stat.icon className="h-6 w-6 text-white" />
@@ -203,103 +152,8 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── Leadership Cards ──────────────────────────────────────────── */}
-        <section className="relative py-20">
-          <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-electric/20 to-transparent" />
-          <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="text-center mb-14">
-              <h2 className="text-3xl font-bold text-white">
-                Leadership <span className="gradient-text">Messages</span>
-              </h2>
-              <p className="mt-3 text-slate-400 max-w-lg mx-auto">
-                Hear directly from the people who built Beyond Intern from the ground up.
-              </p>
-            </div>
-
-            {/* 3-column grid: Tushar, Nandani, Swayam */}
-            <div className="grid gap-8 lg:grid-cols-3">
-              {LEADERS.map((leader) => (
-                <div
-                  key={leader.name}
-                  className="glass-card rounded-3xl overflow-hidden group hover:-translate-y-1 transition-transform duration-300 flex flex-col"
-                >
-                  {/* Accent strip */}
-                  <div className={`h-2 w-full ${leader.gradient}`} />
-
-                  <div className="p-7 flex flex-col flex-1">
-                    {/* Avatar + info */}
-                    <div className="flex items-start gap-4 mb-6">
-                      <div className="relative shrink-0">
-                        {/* Click-to-enlarge dialog */}
-                        <Dialog>
-                          <DialogTrigger
-                            render={
-                              <button
-                                className="relative block h-20 w-20 rounded-2xl overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-electric group/img cursor-zoom-in"
-                                aria-label={`View ${leader.name}'s photo`}
-                              />
-                            }
-                          >
-                            <div className={`absolute inset-0 ${leader.accentBg} border ${leader.accentBorder}`} />
-                            <Image
-                              src={leader.src}
-                              alt={leader.name}
-                              fill
-                              className="object-cover object-top"
-                              sizes="80px"
-                            />
-                            {/* Zoom hint */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                              <ZoomIn className="h-5 w-5 text-white" />
-                            </div>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-sm p-4 bg-navy-light border border-white/10 rounded-3xl">
-                            <div className="relative aspect-square w-full rounded-2xl overflow-hidden">
-                              <Image
-                                src={leader.src}
-                                alt={leader.name}
-                                fill
-                                className="object-cover object-top"
-                                sizes="400px"
-                              />
-                            </div>
-                            <p className="text-center text-sm font-semibold text-white mt-3">
-                              {leader.name}
-                            </p>
-                            <p className="text-center text-xs text-slate-400">{leader.role}</p>
-                          </DialogContent>
-                        </Dialog>
-
-                        {/* Badge dot */}
-                        <span
-                          className={`absolute -bottom-1 -right-1 h-5 w-5 rounded-full ${leader.gradient} flex items-center justify-center z-10`}
-                        >
-                          <span className="text-[9px] text-white font-bold">{leader.badgeChar}</span>
-                        </span>
-                      </div>
-
-                      <div>
-                        <p className={`text-xs font-semibold uppercase tracking-widest ${leader.accent} mb-1`}>
-                          {leader.badge}
-                        </p>
-                        <h3 className="text-xl font-bold text-white">{leader.name}</h3>
-                        <p className="text-sm text-slate-400 mt-0.5">{leader.title}</p>
-                      </div>
-                    </div>
-
-                    <blockquote className="text-slate-300 text-sm leading-relaxed space-y-3 flex-1">
-                      {leader.message}
-                    </blockquote>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* ── Values ───────────────────────────────────────────────────── */}
-        <section className="relative py-20">
-          <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-gold/20 to-transparent" />
+        <section className="relative py-16">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-white">
@@ -321,68 +175,186 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── Message from the Team ──────────────────────────────────────── */}
-        <section className="relative py-20 overflow-hidden">
-          <div className="absolute inset-0 bg-navy-light/30" />
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="h-96 w-96 rounded-full bg-electric/8 blur-[100px]" />
-          </div>
-          <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-electric/20 to-transparent" />
-
-          <div className="relative mx-auto max-w-2xl px-6 text-center">
-            <div className="glass-card rounded-3xl p-10 relative overflow-hidden">
-              <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-electric/10 blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-gold/8 blur-3xl pointer-events-none" />
-
-              <div className="relative z-10 flex flex-col items-center">
-                <div className="h-14 w-14 rounded-2xl gradient-electric flex items-center justify-center glow-blue mb-5">
-                  <Heart className="h-7 w-7 text-white fill-white/30" />
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-4">
-                  A Message from the{" "}
-                  <span className="gradient-text">Beyond Intern Team</span>
-                </h2>
-                <p className="text-slate-300 leading-relaxed text-base mb-4">
-                  Welcome to the Beyond Intern family. 🎉
-                </p>
-                <p className="text-slate-400 leading-relaxed text-sm max-w-lg">
-                  Every student who walks through our doors carries a dream. Our entire team —
-                  from mentors to placement specialists to course designers — is here with one
-                  purpose: to make sure that dream becomes your reality. We are in your corner,
-                  every step of the way.
-                </p>
-                <p className="mt-6 text-xs text-slate-500 italic">
-                  — The Beyond Intern Team, with ❤️
-                </p>
-
-                <div className="mt-6 flex gap-3 items-center text-slate-600">
-                  <span>✦</span>
-                  <span className="text-electric-light/40">✦</span>
-                  <span className="text-gold/40">✦</span>
-                  <span className="text-electric-light/40">✦</span>
-                  <span>✦</span>
-                </div>
-              </div>
+        {/* ── Middle Section Image ─────────────────────────────────────── */}
+        <section className="relative py-12">
+          <div className="mx-auto max-w-4xl px-6 lg:px-8">
+            <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(37,99,235,0.15)] border border-white/10 group">
+              <Image
+                src="/About-1.png"
+                alt="Beyond Intern Students and Team"
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 800px"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-navy/80 via-transparent to-transparent opacity-80" />
             </div>
           </div>
         </section>
 
-        {/* ── CTA ──────────────────────────────────────────────────────── */}
-        <section className="relative py-20 overflow-hidden">
-          <div className="absolute inset-0 bg-linear-to-r from-electric/5 via-transparent to-gold/5" />
-          <div className="relative mx-auto max-w-3xl px-6 text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Ready to go <span className="gradient-text">Beyond?</span>
-            </h2>
-            <p className="text-slate-400 mb-8">
-              Join thousands of students transforming their careers with Beyond Intern.
-            </p>
-            <a
-              href="/login"
-              className="inline-flex items-center gap-2 gradient-electric text-white font-bold px-8 py-3.5 rounded-full glow-blue hover:opacity-90 transition-opacity text-base"
-            >
-              Start For Free Today
-            </a>
+        {/* ── Company Manifesto ────────────────────────────────────────── */}
+        <section className="relative py-20">
+          <div className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-electric/20 to-transparent" />
+          <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-24">
+            
+            {/* Leadership Team */}
+            <div>
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-white">
+                  Leadership <span className="gradient-text">Team</span>
+                </h2>
+              </div>
+              <div className="grid gap-8 md:grid-cols-3">
+                {LEADERS.map((leader) => (
+                  <div key={leader.name} className="glass-card rounded-3xl p-6 flex flex-col items-center text-center group">
+                    <div className="relative h-24 w-24 rounded-full overflow-hidden mb-5 border-2 border-white/10 group-hover:border-electric/50 transition-colors">
+                      <Image
+                        src={leader.src}
+                        alt={leader.name}
+                        fill
+                        className="object-cover"
+                        sizes="96px"
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-1">{leader.name}</h3>
+                    <p className={`text-sm font-semibold uppercase tracking-widest ${leader.accent} mb-4`}>
+                      {leader.title}
+                    </p>
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      {leader.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Vision & Mission */}
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="glass-card rounded-3xl p-8 border border-white/10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-lg bg-electric/10 flex items-center justify-center">
+                    <Target className="h-5 w-5 text-electric-light" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Our Vision</h3>
+                </div>
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-electric-light shrink-0 mt-0.5" />
+                    <span className="text-slate-300">To build a global ecosystem where every student has access to world-class career acceleration.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-electric-light shrink-0 mt-0.5" />
+                    <span className="text-slate-300">To eliminate the skills gap between academia and modern industry demands.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-electric-light shrink-0 mt-0.5" />
+                    <span className="text-slate-300">To foster a community of lifelong learners, mentors, and industry leaders.</span>
+                  </li>
+                </ul>
+              </div>
+              <div className="glass-card rounded-3xl p-8 border border-white/10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-lg bg-emerald/10 flex items-center justify-center">
+                    <Flag className="h-5 w-5 text-emerald" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white">Our Mission</h3>
+                </div>
+                <ul className="space-y-4">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-emerald shrink-0 mt-0.5" />
+                    <span className="text-slate-300">Provide accessible, outcome-driven education through structured mentorship and real-world projects.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-emerald shrink-0 mt-0.5" />
+                    <span className="text-slate-300">Equip learners with clarity, competence, and the confidence to succeed in the workplace.</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-emerald shrink-0 mt-0.5" />
+                    <span className="text-slate-300">Partner with top companies to create direct pathways to high-impact careers.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Target Audience & Differentiators */}
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-6">Target Audience</h3>
+                <div className="grid gap-4">
+                  {[
+                    "University Students seeking practical experience",
+                    "Recent Graduates looking to break into the industry",
+                    "Early-Career Professionals aiming to upskill",
+                    "Career Switchers transitioning into tech and management"
+                  ].map((audience, i) => (
+                    <div key={i} className="glass-card rounded-xl p-4 flex items-center gap-4">
+                      <div className="h-2 w-2 rounded-full bg-gold-light shrink-0" />
+                      <p className="text-slate-300 font-medium">{audience}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-6">Key Differentiators</h3>
+                <div className="grid gap-4">
+                  {[
+                    "Industry-aligned curriculum built by top-tier professionals",
+                    "1:1 Mentorship and personalized career roadmaps",
+                    "Guaranteed internship placements and live projects",
+                    "Continuous feedback loop and soft-skills training"
+                  ].map((diff, i) => (
+                    <div key={i} className="glass-card rounded-xl p-4 flex items-center gap-4">
+                      <div className="h-2 w-2 rounded-full bg-electric-light shrink-0" />
+                      <p className="text-slate-300 font-medium">{diff}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 2026 Strategic Goals & Closing */}
+            <div className="space-y-12">
+              <div className="glass-card rounded-3xl p-8 md:p-12 border border-white/10 bg-gradient-to-br from-navy to-electric/5">
+                <div className="flex items-center gap-3 mb-8">
+                  <Rocket className="h-6 w-6 text-electric-light" />
+                  <h3 className="text-2xl font-bold text-white">2026 Strategic Goals</h3>
+                </div>
+                <div className="grid sm:grid-cols-3 gap-6">
+                  {[
+                    { title: "Global Expansion", desc: "Scale our platform to reach students across 50+ countries." },
+                    { title: "100K Placements", desc: "Successfully place 100,000+ learners into high-impact roles." },
+                    { title: "Corporate Partnerships", desc: "Onboard 500+ global hiring partners for direct recruitment." }
+                  ].map((goal, i) => (
+                    <div key={i} className="space-y-2">
+                      <h4 className="text-lg font-bold text-white">{goal.title}</h4>
+                      <p className="text-sm text-slate-400 leading-relaxed">{goal.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Closing Perspective / Final CTA */}
+              <div className="relative rounded-3xl overflow-hidden p-10 md:p-16 text-center shadow-2xl border border-white/20">
+                <div className="absolute inset-0 bg-gradient-to-r from-electric via-blue-600 to-indigo-600 opacity-90" />
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-overlay" />
+                <div className="relative z-10 max-w-2xl mx-auto space-y-6">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white">
+                    Closing Perspective
+                  </h2>
+                  <p className="text-lg text-white/90 leading-relaxed">
+                    Education is the foundation, but execution is the building. We invite you to join us on this journey to redefine how the world learns, grows, and succeeds. Your future starts today. Let's build it together.
+                  </p>
+                  <div className="pt-4">
+                    <a
+                      href="/login"
+                      className="inline-flex items-center justify-center bg-white text-electric font-bold px-8 py-4 rounded-full hover:scale-105 transition-transform duration-300 shadow-xl"
+                    >
+                      Join Beyond Intern Today
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
       </main>
