@@ -8,7 +8,38 @@ import {
   BookOpen, GraduationCap, Sparkles, Layers, ChevronDown, Calendar
 } from "lucide-react";
 import Link from "next/link";
-import { Module } from "@/lib/courses";
+
+
+interface VideoModule {
+  id: string;
+  title: string;
+  youtube_id: string;
+}
+
+interface SyllabusModule {
+  id: string;
+  month: string;
+  weeks: string;
+  topics: string;
+}
+
+interface CourseData {
+  id?: string;
+  title: string;
+  description: string;
+  category: string;
+  duration: string;
+  level: string;
+  price: number | null;
+  career_outcomes?: string[];
+  outcomes?: string[];
+  schedule?: Record<string, string>;
+  weeklyCommitment?: string;
+  video_modules?: VideoModule[];
+  curriculum_syllabus?: SyllabusModule[];
+  schedule_text?: string;
+  assignment_link?: string;
+}
 
 declare global {
   interface Window {
@@ -18,8 +49,7 @@ declare global {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: { initialCourse?: any; serverIsEnrolled?: boolean }) {
+export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: { initialCourse?: CourseData; serverIsEnrolled?: boolean }) {
   const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
 
   const isEnrolled = serverIsEnrolled;
@@ -27,10 +57,13 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
   const [curriculumOpen, setCurriculumOpen] = useState(false);
   const [openWeeks, setOpenWeeks] = useState<Record<string, boolean>>({});
 
-  const parsedCurriculum = Array.isArray(initialCourse?.curriculum) ? initialCourse.curriculum : [];
-  const modules: Module[] = parsedCurriculum;
-  const firstVideoId = modules.length > 0 && modules[0]?.youtube_ids?.length > 0
-    ? modules[0].youtube_ids[0]
+  const videoModules = Array.isArray(initialCourse?.video_modules) ? initialCourse.video_modules : [];
+  const syllabusModules = Array.isArray(initialCourse?.curriculum_syllabus) ? initialCourse.curriculum_syllabus : [];
+  const scheduleText = initialCourse?.schedule_text || "";
+  const assignmentLink = initialCourse?.assignment_link || "";
+
+  const firstVideoId = videoModules.length > 0 && videoModules[0].youtube_id
+    ? videoModules[0].youtube_id
     : "dQw4w9WgXcQ"; // Fallback placeholder if entirely empty
 
   const [currentVideoId, setCurrentVideoId] = useState<string>(firstVideoId);
@@ -134,12 +167,12 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
     setOpenWeeks(prev => ({ ...prev, [weekKey]: !prev[weekKey] }));
   };
 
-  const groupedCurriculum = modules.reduce((acc, mod) => {
-    if (!acc[mod.month_group]) acc[mod.month_group] = {};
-    if (!acc[mod.month_group][mod.weeks]) acc[mod.month_group][mod.weeks] = [];
-    acc[mod.month_group][mod.weeks].push(mod);
+  const groupedCurriculum = syllabusModules.reduce((acc: Record<string, Record<string, SyllabusModule[]>>, mod: SyllabusModule) => {
+    if (!acc[mod.month]) acc[mod.month] = {};
+    if (!acc[mod.month][mod.weeks]) acc[mod.month][mod.weeks] = [];
+    acc[mod.month][mod.weeks].push(mod);
     return acc;
-  }, {} as Record<string, Record<string, Module[]>>);
+  }, {} as Record<string, Record<string, SyllabusModule[]>>);
 
   const outcomes: string[] = initialCourse?.career_outcomes || initialCourse?.outcomes || [];
   const renderOutcomes = () => {
@@ -194,11 +227,13 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
           {initialCourse && <p className="mt-1 text-sm text-slate-400">{initialCourse.category} · {initialCourse.duration} · {initialCourse.level}</p>}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="col-span-1 lg:col-span-2 space-y-6">
+        {/* Top Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="lg:col-span-8 space-y-6">
+            {/* Video Player */}
             <div ref={playerWrapperRef} className="glass-card rounded-2xl flex flex-col overflow-hidden bg-navy border border-white/10 shadow-2xl">
               <div className="relative w-full max-w-full aspect-video bg-black overflow-hidden flex items-center justify-center">
-                {modules.length > 0 ? (
+                {videoModules.length > 0 ? (
                   <>
                     <div ref={containerRef} className="absolute inset-0 w-full h-full" />
                     <div className="absolute inset-0 z-10 cursor-pointer" onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} />
@@ -231,87 +266,147 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
               </div>
             </div>
 
-            {renderOutcomes()}
-            {renderSchedule()}
+            {/* Middle Row: Video Modules */}
+            {videoModules.length > 0 && (
+              <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-6">
+                  <Play className="h-5 w-5 text-electric-light" /> Video Modules
+                </h2>
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+                  {videoModules.map((mod: VideoModule, idx: number) => {
+                    const isActive = currentVideoId === mod.youtube_id;
+                    return (
+                      <button
+                        key={mod.id || idx}
+                        onClick={() => setCurrentVideoId(mod.youtube_id)}
+                        className={`w-full flex items-center justify-between p-4 rounded-xl text-left transition-all ${
+                          isActive
+                            ? "bg-electric/20 border border-electric/40 shadow-[0_0_15px_rgba(37,99,235,0.15)]"
+                            : "bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10"
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`h-10 w-10 shrink-0 rounded-lg flex items-center justify-center ${isActive ? "bg-electric" : "bg-white/10"}`}>
+                            {isActive && isPlaying ? (
+                              <div className="flex gap-1">
+                                <div className="w-1 h-3 bg-white animate-bounce" />
+                                <div className="w-1 h-3 bg-white animate-bounce [animation-delay:0.2s]" />
+                                <div className="w-1 h-3 bg-white animate-bounce [animation-delay:0.4s]" />
+                              </div>
+                            ) : (
+                              <Play className={`h-5 w-5 ${isActive ? "text-white" : "text-slate-400"}`} />
+                            )}
+                          </div>
+                          <div>
+                            <p className={`font-semibold ${isActive ? "text-white" : "text-slate-300"}`}>{mod.title}</p>
+                            <p className="text-xs text-slate-500 mt-0.5">Module {idx + 1}</p>
+                          </div>
+                        </div>
+                        {isActive && <span className="text-xs font-semibold text-electric-light uppercase tracking-wider">Now Playing</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="col-span-1">
-            <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg sticky top-6">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-6">
-                <Layers className="h-5 w-5 text-electric-light" /> Curriculum
+          <div className="lg:col-span-4 space-y-6">
+            {/* RIGHT (30% width): A styled "Schedule" card displaying the schedule_text. */}
+            <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                <Calendar className="h-5 w-5 text-amber-400" /> Live Schedule
               </h2>
-              <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
-                {Object.entries(groupedCurriculum).map(([month, weeksObj]) => (
-                  <div key={month} className="space-y-3">
-                    <h3 className="text-sm font-bold text-electric uppercase tracking-wider">{month}</h3>
-                    <div className="space-y-2">
-                      {Object.entries(weeksObj).map(([week, mods]) => {
-                        const weekKey = `${month}-${week}`;
-                        const isOpen = openWeeks[weekKey];
-                        return (
-                          <div key={weekKey} className="rounded-xl overflow-hidden bg-white/5 border border-white/5">
-                            <button
-                              onClick={() => toggleWeek(weekKey)}
-                              className="w-full flex items-center justify-between p-3.5 hover:bg-white/10 transition-colors"
-                            >
-                              <span className="text-sm font-semibold text-slate-200">{week}</span>
-                              <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            <AnimatePresence initial={false}>
-                              {isOpen && (
-                                <motion.div
-                                  initial={{ height: 0, opacity: 0 }}
-                                  animate={{ height: "auto", opacity: 1 }}
-                                  exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.3 }}
-                                  className="overflow-hidden bg-black/20"
-                                >
-                                  <div className="p-3 space-y-4">
-                                    {mods.map((mod) => (
-                                      <div key={mod.id} className="space-y-1.5">
-                                        <p className="text-xs font-semibold text-slate-400 px-1">{mod.title}</p>
-                                        <div className="space-y-1">
-                                          {mod.youtube_ids.map((vid, idx) => {
-                                            const isActive = currentVideoId === vid;
-                                            return (
-                                              <button
-                                                key={`${mod.id}-${idx}`}
-                                                onClick={() => setCurrentVideoId(vid)}
-                                                className={`w-full flex items-start gap-3 p-2.5 rounded-lg text-left transition-all ${
-                                                  isActive
-                                                    ? "bg-electric/20 text-electric-light border border-electric/30"
-                                                    : "hover:bg-white/10 text-slate-300 border border-transparent"
-                                                }`}
-                                              >
-                                                <Play className={`h-4 w-4 shrink-0 mt-0.5 ${isActive ? "text-electric-light" : "text-slate-500"}`} />
-                                                <span className="text-sm font-medium leading-tight">
-                                                  {mod.youtube_ids.length > 1 ? `${mod.title} (Part ${idx + 1})` : mod.title}
-                                                </span>
-                                              </button>
-                                            );
-                                          })}
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-                {modules.length === 0 && (
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
-                    <p className="text-sm font-medium text-slate-300">Course modules are currently being updated.</p>
-                  </div>
-                )}
-              </div>
+              {scheduleText ? (
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <p className="text-amber-300 text-sm leading-relaxed">{scheduleText}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400 italic">No live schedule posted yet.</p>
+              )}
             </div>
+            
+            {/* Outcomes (existing, if needed) */}
+            {renderOutcomes()}
           </div>
         </div>
+
+        {/* Bottom Row 1: Curriculum Syllabus */}
+        <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg">
+          <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-6">
+            <Layers className="h-5 w-5 text-electric-light" /> Curriculum Syllabus
+          </h2>
+          {syllabusModules.length > 0 ? (
+            <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
+              {Object.entries(groupedCurriculum).map(([month, weeksObj]) => (
+                <div key={month} className="space-y-3">
+                  <h3 className="text-sm font-bold text-electric uppercase tracking-wider">{month}</h3>
+                  <div className="space-y-2">
+                    {Object.entries(weeksObj as Record<string, SyllabusModule[]>).map(([week, mods]) => {
+                      const weekKey = `${month}-${week}`;
+                      const isOpen = openWeeks[weekKey];
+                      return (
+                        <div key={weekKey} className="rounded-xl overflow-hidden bg-white/5 border border-white/5">
+                          <button
+                            onClick={() => toggleWeek(weekKey)}
+                            className="w-full flex items-center justify-between p-4 hover:bg-white/10 transition-colors"
+                          >
+                            <span className="text-sm font-semibold text-slate-200">{week}</span>
+                            <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          <AnimatePresence initial={false}>
+                            {isOpen && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="overflow-hidden bg-black/20"
+                              >
+                                <div className="p-4 space-y-4">
+                                  {mods.map((mod: SyllabusModule, idx: number) => (
+                                    <div key={mod.id || idx} className="space-y-2">
+                                      <p className="text-sm text-slate-300 whitespace-pre-line leading-relaxed">{mod.topics}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
+              <p className="text-sm font-medium text-slate-300">Syllabus is currently being updated.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Row 2: Assignment Submission */}
+        {assignmentLink && (
+          <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg bg-linear-to-r from-purple-500/10 to-transparent">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-purple-400" /> Assignment Submission
+                </h2>
+                <p className="text-sm text-slate-400 mt-1">Submit your completed assignment for review and grading.</p>
+              </div>
+              <Link 
+                href={assignmentLink} 
+                target="_blank"
+                className="shrink-0 h-11 px-6 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-semibold flex items-center justify-center transition-colors shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(168,85,247,0.5)]"
+              >
+                Submit Assignment
+              </Link>
+            </div>
+          </div>
+        )}
       </motion.div>
     );
   }
@@ -354,7 +449,7 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
             </div>
             
             <div className="border-t border-white/5 pt-6">
-              {modules.length === 0 ? (
+              {syllabusModules.length === 0 ? (
                 <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-center">
                   <p className="text-sm font-medium text-slate-300">Course modules are currently being updated.</p>
                 </div>
@@ -365,7 +460,7 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
                     <span className="flex items-center gap-2.5 text-sm font-semibold text-white">
                       <Layers className="h-4 w-4 text-electric-light" />
                       View Course Curriculum
-                      <span className="text-xs font-medium text-slate-500">({modules.length} modules)</span>
+                      <span className="text-xs font-medium text-slate-500">({syllabusModules.length} modules)</span>
                     </span>
                     <motion.span animate={{ rotate: curriculumOpen ? 180 : 0 }} transition={{ duration: 0.25 }} className="text-slate-400 group-hover:text-electric-light transition-colors">
                       <ChevronDown className="h-5 w-5" />
@@ -376,8 +471,8 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
                       <motion.div key="curriculum" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.35, ease: "easeInOut" }} className="overflow-hidden">
                         <div className="mt-4 relative pl-8">
                           <div className="absolute left-[11px] top-2 bottom-2 w-px bg-linear-to-b from-electric/60 via-electric/30 to-transparent" />
-                          {modules.map((module, i, arr) => (
-                            <motion.div key={module.id} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
+                          {syllabusModules.map((module: SyllabusModule, i: number, arr: SyllabusModule[]) => (
+                            <motion.div key={module.id || i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.06 }}
                               className={`relative flex items-start gap-4 ${i < arr.length - 1 ? "pb-5" : ""}`}>
                               <div className="absolute -left-8 top-1 flex items-center justify-center">
                                 <span className="h-[22px] w-[22px] rounded-full bg-electric/10 border border-electric/30 flex items-center justify-center">
@@ -385,8 +480,8 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
                                 </span>
                               </div>
                               <div className="flex-1">
-                                <p className="text-sm font-semibold text-white leading-relaxed">{module.title}</p>
-                                <p className="text-xs text-slate-400 mt-1">{module.month_group} • {module.weeks}</p>
+                                <p className="text-sm font-semibold text-white leading-relaxed">{module.topics || "Topics"}</p>
+                                <p className="text-xs text-slate-400 mt-1">{module.month} • {module.weeks}</p>
                               </div>
                               <span className="text-[10px] font-bold text-slate-600 shrink-0 mt-0.5">{String(i + 1).padStart(2, "0")}</span>
                             </motion.div>

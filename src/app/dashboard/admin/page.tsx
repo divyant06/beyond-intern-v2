@@ -45,12 +45,17 @@ const ADMIN_EMAILS = ["info@beyondintern.com", "ansupoddar11@gmail.com"];
 type Status = "idle" | "loading" | "success" | "error";
 type Tab = "enrol" | "courses" | "analytics" | "webinars" | "notifications";
 
-interface Module {
+interface VideoModule {
   id: string;
   title: string;
-  month_group: string;
+  youtube_id: string;
+}
+
+interface SyllabusModule {
+  id: string;
+  month: string;
   weeks: string;
-  youtube_ids: string[];
+  topics: string;
 }
 
 interface RawCourse {
@@ -63,7 +68,10 @@ interface RawCourse {
   outcomes: string;
   price?: string | null;
   image_url?: string;
-  curriculum?: Module[] | string;
+  video_modules?: VideoModule[] | string;
+  curriculum_syllabus?: SyllabusModule[] | string;
+  schedule_text?: string | null;
+  assignment_link?: string | null;
   created_at?: string;
 }
 
@@ -117,7 +125,10 @@ export default function AdminPage() {
     outcomes: "",
     price: "",
     image_url: "",
-    curriculum: [] as Module[],
+    video_modules: [] as VideoModule[],
+    curriculum_syllabus: [] as SyllabusModule[],
+    schedule_text: "",
+    assignment_link: "",
     image_file: null as File | null,
   });
   const [migrateStatus, setMigrateStatus] = useState<Status>("idle");
@@ -229,7 +240,10 @@ export default function AdminPage() {
     formData.append("outcomes", courseForm.outcomes);
     formData.append("price", courseForm.price);
     formData.append("image_url", courseForm.image_url);
-    formData.append("curriculum", JSON.stringify(courseForm.curriculum));
+    formData.append("video_modules", JSON.stringify(courseForm.video_modules));
+    formData.append("curriculum_syllabus", JSON.stringify(courseForm.curriculum_syllabus));
+    formData.append("schedule_text", courseForm.schedule_text);
+    formData.append("assignment_link", courseForm.assignment_link);
     
     if (courseForm.image_file) {
       formData.append("image", courseForm.image_file);
@@ -241,7 +255,7 @@ export default function AdminPage() {
         editingCourse ? "Course updated successfully!" : "Course published successfully!"
       );
       setCourseStatus("success");
-      setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", price: "", image_url: "", curriculum: [] as Module[], image_file: null });
+      setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", price: "", image_url: "", video_modules: [] as VideoModule[], curriculum_syllabus: [] as SyllabusModule[], schedule_text: "", assignment_link: "", image_file: null });
       setEditingCourse(null);
       loadCourses();
     } else {
@@ -259,15 +273,26 @@ export default function AdminPage() {
 
   // ── Edit Prefill ──
   function handleEditCourse(course: RawCourse) {
-    let parsedCurriculum: Module[] = [];
-    if (typeof course.curriculum === "string") {
+    let parsedVideoModules: VideoModule[] = [];
+    if (typeof course.video_modules === "string") {
       try {
-        parsedCurriculum = JSON.parse(course.curriculum);
+        parsedVideoModules = JSON.parse(course.video_modules);
       } catch {
-        parsedCurriculum = [];
+        parsedVideoModules = [];
       }
-    } else if (Array.isArray(course.curriculum)) {
-      parsedCurriculum = course.curriculum;
+    } else if (Array.isArray(course.video_modules)) {
+      parsedVideoModules = course.video_modules;
+    }
+
+    let parsedSyllabus: SyllabusModule[] = [];
+    if (typeof course.curriculum_syllabus === "string") {
+      try {
+        parsedSyllabus = JSON.parse(course.curriculum_syllabus);
+      } catch {
+        parsedSyllabus = [];
+      }
+    } else if (Array.isArray(course.curriculum_syllabus)) {
+      parsedSyllabus = course.curriculum_syllabus;
     }
 
     setCourseForm({
@@ -280,7 +305,10 @@ export default function AdminPage() {
       outcomes: course.outcomes,
       price: course.price || "",
       image_url: course.image_url || "",
-      curriculum: parsedCurriculum,
+      video_modules: parsedVideoModules,
+      curriculum_syllabus: parsedSyllabus,
+      schedule_text: course.schedule_text || "",
+      assignment_link: course.assignment_link || "",
       image_file: null,
     });
     setEditingCourse(course.id);
@@ -630,59 +658,136 @@ export default function AdminPage() {
                   )}
                 </div>
 
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Schedule Text</label>
+                  <Input 
+                    placeholder="e.g. Next class: Friday 6 PM"
+                    value={courseForm.schedule_text}
+                    onChange={(e) => setCourseForm({ ...courseForm, schedule_text: e.target.value })}
+                    className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-electric/50 rounded-xl"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Assignment Link</label>
+                  <Input 
+                    placeholder="e.g. https://forms.gle/..."
+                    value={courseForm.assignment_link}
+                    onChange={(e) => setCourseForm({ ...courseForm, assignment_link: e.target.value })}
+                    className="h-11 bg-white/5 border-white/10 text-white placeholder:text-white/40 focus:border-electric/50 rounded-xl"
+                  />
+                </div>
+
+                {/* Video Modules */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-slate-300">Curriculum Modules</label>
+                    <label className="text-sm font-medium text-slate-300">Video Modules</label>
                     <Button
                       type="button"
                       onClick={() => setCourseForm({
                         ...courseForm,
-                        curriculum: [...courseForm.curriculum, { id: crypto.randomUUID(), title: "", month_group: "", weeks: "", youtube_ids: [] }]
+                        video_modules: [...courseForm.video_modules, { id: crypto.randomUUID(), title: "", youtube_id: "" }]
                       })}
                       className="h-8 px-3 text-xs bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10"
                     >
-                      <PlusCircle className="mr-1.5 h-3 w-3" /> Add Module
+                      <PlusCircle className="mr-1.5 h-3 w-3" /> Add Video
                     </Button>
                   </div>
 
                   <div className="space-y-3">
-                    {courseForm.curriculum.map((mod: Module, mIndex: number) => (
+                    {courseForm.video_modules.map((mod: VideoModule, mIndex: number) => (
                       <div key={mod.id} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3 relative group">
                         <button
                           type="button"
                           onClick={() => {
-                            const newCurriculum = [...courseForm.curriculum];
-                            newCurriculum.splice(mIndex, 1);
-                            setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                            const newMods = [...courseForm.video_modules];
+                            newMods.splice(mIndex, 1);
+                            setCourseForm({ ...courseForm, video_modules: newMods });
                           }}
                           className="absolute top-3 right-3 p-1.5 rounded-md text-rose-400 hover:bg-rose-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pr-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-8">
                           <div className="space-y-1">
                             <label className="text-xs text-slate-400">Title</label>
                             <Input 
                               placeholder="e.g. Introduction to React"
                               value={mod.title}
                               onChange={(e) => {
-                                const newCurriculum = [...courseForm.curriculum];
-                                newCurriculum[mIndex].title = e.target.value;
-                                setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                                const newMods = [...courseForm.video_modules];
+                                newMods[mIndex].title = e.target.value;
+                                setCourseForm({ ...courseForm, video_modules: newMods });
                               }}
                               className="h-9 bg-white/5 border-white/10 text-white text-sm"
                             />
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs text-slate-400">Month Group</label>
+                            <label className="text-xs text-slate-400">YouTube ID</label>
+                            <Input 
+                              placeholder="e.g. dQw4w9WgXcQ"
+                              value={mod.youtube_id}
+                              onChange={(e) => {
+                                const newMods = [...courseForm.video_modules];
+                                newMods[mIndex].youtube_id = e.target.value;
+                                setCourseForm({ ...courseForm, video_modules: newMods });
+                              }}
+                              className="h-9 bg-white/5 border-white/10 text-white text-sm"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {courseForm.video_modules.length === 0 && (
+                      <div className="p-6 rounded-xl border border-dashed border-white/20 text-center">
+                        <p className="text-sm text-slate-400">No video modules added yet.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Curriculum Syllabus */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-slate-300">Curriculum Syllabus</label>
+                    <Button
+                      type="button"
+                      onClick={() => setCourseForm({
+                        ...courseForm,
+                        curriculum_syllabus: [...courseForm.curriculum_syllabus, { id: crypto.randomUUID(), month: "", weeks: "", topics: "" }]
+                      })}
+                      className="h-8 px-3 text-xs bg-white/5 hover:bg-white/10 text-white rounded-lg border border-white/10"
+                    >
+                      <PlusCircle className="mr-1.5 h-3 w-3" /> Add Syllabus Module
+                    </Button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {courseForm.curriculum_syllabus.map((mod: SyllabusModule, mIndex: number) => (
+                      <div key={mod.id} className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-3 relative group">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newSyl = [...courseForm.curriculum_syllabus];
+                            newSyl.splice(mIndex, 1);
+                            setCourseForm({ ...courseForm, curriculum_syllabus: newSyl });
+                          }}
+                          className="absolute top-3 right-3 p-1.5 rounded-md text-rose-400 hover:bg-rose-400/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-8">
+                          <div className="space-y-1">
+                            <label className="text-xs text-slate-400">Month</label>
                             <Input 
                               placeholder="e.g. Month 1"
-                              value={mod.month_group}
+                              value={mod.month}
                               onChange={(e) => {
-                                const newCurriculum = [...courseForm.curriculum];
-                                newCurriculum[mIndex].month_group = e.target.value;
-                                setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                                const newSyl = [...courseForm.curriculum_syllabus];
+                                newSyl[mIndex].month = e.target.value;
+                                setCourseForm({ ...courseForm, curriculum_syllabus: newSyl });
                               }}
                               className="h-9 bg-white/5 border-white/10 text-white text-sm"
                             />
@@ -693,64 +798,33 @@ export default function AdminPage() {
                               placeholder="e.g. Week 1-2"
                               value={mod.weeks}
                               onChange={(e) => {
-                                const newCurriculum = [...courseForm.curriculum];
-                                newCurriculum[mIndex].weeks = e.target.value;
-                                setCourseForm({ ...courseForm, curriculum: newCurriculum });
+                                const newSyl = [...courseForm.curriculum_syllabus];
+                                newSyl[mIndex].weeks = e.target.value;
+                                setCourseForm({ ...courseForm, curriculum_syllabus: newSyl });
                               }}
                               className="h-9 bg-white/5 border-white/10 text-white text-sm"
                             />
                           </div>
                         </div>
-
-                        <div className="space-y-2 pt-2 border-t border-white/10">
-                          <div className="flex items-center justify-between">
-                            <label className="text-xs font-medium text-slate-400">YouTube IDs</label>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const newCurriculum = [...courseForm.curriculum];
-                                newCurriculum[mIndex].youtube_ids.push("");
-                                setCourseForm({ ...courseForm, curriculum: newCurriculum });
-                              }}
-                              className="text-xs text-electric hover:text-electric-light flex items-center"
-                            >
-                              <PlusCircle className="h-3 w-3 mr-1" /> Add ID
-                            </button>
-                          </div>
-                          {mod.youtube_ids.map((yId, yIndex) => (
-                            <div key={yIndex} className="flex items-center gap-2">
-                              <Input 
-                                placeholder="e.g. dQw4w9WgXcQ"
-                                value={yId}
-                                onChange={(e) => {
-                                  const newCurriculum = [...courseForm.curriculum];
-                                  newCurriculum[mIndex].youtube_ids[yIndex] = e.target.value;
-                                  setCourseForm({ ...courseForm, curriculum: newCurriculum });
-                                }}
-                                className="h-8 bg-white/5 border-white/10 text-white text-xs flex-1"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newCurriculum = [...courseForm.curriculum];
-                                  newCurriculum[mIndex].youtube_ids.splice(yIndex, 1);
-                                  setCourseForm({ ...courseForm, curriculum: newCurriculum });
-                                }}
-                                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-400/10 rounded"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
-                          {mod.youtube_ids.length === 0 && (
-                            <p className="text-xs text-slate-500 italic">No videos added yet.</p>
-                          )}
+                        <div className="space-y-1 mt-3">
+                          <label className="text-xs text-slate-400">Topics</label>
+                          <textarea 
+                            placeholder="e.g. Introduction to HTML, CSS basics"
+                            value={mod.topics}
+                            rows={2}
+                            onChange={(e) => {
+                              const newSyl = [...courseForm.curriculum_syllabus];
+                              newSyl[mIndex].topics = e.target.value;
+                              setCourseForm({ ...courseForm, curriculum_syllabus: newSyl });
+                            }}
+                            className="w-full rounded-xl bg-white/5 border border-white/10 text-white px-4 py-2 text-sm focus:outline-none focus:border-electric/50 transition-colors placeholder:text-white/40 resize-none"
+                          />
                         </div>
                       </div>
                     ))}
-                    {courseForm.curriculum.length === 0 && (
+                    {courseForm.curriculum_syllabus.length === 0 && (
                       <div className="p-6 rounded-xl border border-dashed border-white/20 text-center">
-                        <p className="text-sm text-slate-400">No modules added yet.</p>
+                        <p className="text-sm text-slate-400">No syllabus modules added yet.</p>
                       </div>
                     )}
                   </div>
@@ -790,7 +864,7 @@ export default function AdminPage() {
                       type="button"
                       onClick={() => {
                         setEditingCourse(null);
-                        setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", price: "", image_url: "", curriculum: [] as Module[], image_file: null });
+                        setCourseForm({ id: "", title: "", description: "", category: "", duration: "", level: "", outcomes: "", price: "", image_url: "", video_modules: [] as VideoModule[], curriculum_syllabus: [] as SyllabusModule[], schedule_text: "", assignment_link: "", image_file: null });
                       }}
                       className="h-11 bg-white/5 border border-white/10 text-slate-300 rounded-xl hover:bg-white/10"
                     >

@@ -69,6 +69,10 @@ export async function upsertCourse(formData: FormData) {
     const curriculum = formData.get("curriculum") as string | null;
     
     // New fields
+    const video_modules = formData.get("video_modules") as string | null;
+    const curriculum_syllabus = formData.get("curriculum_syllabus") as string | null;
+    const schedule_text = formData.get("schedule_text") as string | null;
+    const assignment_link = formData.get("assignment_link") as string | null;
     const career_outcomes = formData.get("career_outcomes") as string | null;
     const prerequisites = formData.get("prerequisites") as string | null;
     const faqs = formData.get("faqs") as string | null;
@@ -121,6 +125,10 @@ export async function upsertCourse(formData: FormData) {
         price: (price || "").trim() || null,
         image_url: (image_url || "").trim() || null,
         curriculum: safeParse(curriculum, []),
+        video_modules: safeParse(video_modules, []),
+        curriculum_syllabus: safeParse(curriculum_syllabus, []),
+        schedule_text: (schedule_text || "").trim() || null,
+        assignment_link: (assignment_link || "").trim() || null,
         career_outcomes: safeParse(career_outcomes, []),
         prerequisites: (prerequisites || "").trim() || null,
         faqs: safeParse(faqs, []),
