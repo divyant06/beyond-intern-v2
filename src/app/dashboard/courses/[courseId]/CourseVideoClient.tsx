@@ -309,6 +309,23 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
                 </div>
               </div>
             )}
+
+            {/* Key Outcomes — placed below Video Modules, above Curriculum */}
+            {outcomes.length > 0 && (
+              <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                  <Target className="h-5 w-5 text-emerald-400" /> Key Outcomes
+                </h2>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {outcomes.map((outcome, i) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-slate-300">
+                      <CheckCircle className="h-4 w-4 text-emerald-400 mt-0.5 shrink-0" />
+                      {outcome}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-4 space-y-6">
@@ -325,11 +342,9 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
                 <p className="text-sm text-slate-400 italic">No live schedule posted yet.</p>
               )}
             </div>
-            
-            {/* Outcomes (existing, if needed) */}
-            {renderOutcomes()}
           </div>
         </div>
+
 
         {/* Bottom Row 1: Curriculum Syllabus */}
         <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg">
@@ -387,26 +402,35 @@ export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: {
           )}
         </div>
 
-        {/* Bottom Row 2: Assignment Submission */}
-        {assignmentLink && (
-          <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg bg-linear-to-r from-purple-500/10 to-transparent">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-purple-400" /> Assignment Submission
-                </h2>
-                <p className="text-sm text-slate-400 mt-1">Submit your completed assignment for review and grading.</p>
-              </div>
-              <Link 
-                href={assignmentLink} 
+        {/* Bottom Row 2: Assignment Submission — always shown */}
+        <div className="glass-card rounded-2xl p-6 border border-white/10 shadow-lg bg-gradient-to-r from-purple-500/10 to-transparent">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-purple-400" /> Assignment Submission
+              </h2>
+              <p className="text-sm text-slate-400 mt-1">
+                {assignmentLink
+                  ? "Submit your completed assignment for review and grading."
+                  : "No assignments due at this time."}
+              </p>
+            </div>
+            {assignmentLink ? (
+              <Link
+                href={assignmentLink}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="shrink-0 h-11 px-6 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-semibold flex items-center justify-center transition-colors shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_25px_rgba(168,85,247,0.5)]"
               >
                 Submit Assignment
               </Link>
-            </div>
+            ) : (
+              <span className="shrink-0 h-11 px-6 rounded-xl bg-white/5 border border-white/10 text-slate-500 font-semibold flex items-center justify-center cursor-not-allowed">
+                No Link Yet
+              </span>
+            )}
           </div>
-        )}
+        </div>
       </motion.div>
     );
   }

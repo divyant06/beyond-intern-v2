@@ -68,6 +68,7 @@ interface RawCourse {
   outcomes: string;
   price?: string | null;
   image_url?: string;
+  youtube_id?: string | null;
   video_modules?: VideoModule[] | string;
   curriculum_syllabus?: SyllabusModule[] | string;
   schedule_text?: string | null;
@@ -282,6 +283,12 @@ export default function AdminPage() {
       }
     } else if (Array.isArray(course.video_modules)) {
       parsedVideoModules = course.video_modules;
+    }
+
+    // Legacy fallback: if no video_modules exist but a bare youtube_id does,
+    // seed the list with it so existing content is not lost.
+    if (parsedVideoModules.length === 0 && course.youtube_id) {
+      parsedVideoModules = [{ id: crypto.randomUUID(), title: "Main Video", youtube_id: course.youtube_id }];
     }
 
     let parsedSyllabus: SyllabusModule[] = [];
@@ -561,7 +568,7 @@ export default function AdminPage() {
               <form onSubmit={handlePublishCourse} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-sm font-medium text-slate-300">YouTube Video ID (Primary Key)</label>
+                    <label className="text-sm font-medium text-slate-300">Course ID (Unique Slug)</label>
                     <Input
                       placeholder="e.g. rfscVS0vtbw"
                       value={courseForm.id}
