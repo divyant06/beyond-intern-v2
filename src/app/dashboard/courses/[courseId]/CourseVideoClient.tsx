@@ -19,7 +19,7 @@ declare global {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function CourseVideoClient({ courseId, initialCourse, serverIsEnrolled = false }: { courseId: string; initialCourse?: any; serverIsEnrolled?: boolean }) {
+export function CourseVideoClient({ initialCourse, serverIsEnrolled = false }: { initialCourse?: any; serverIsEnrolled?: boolean }) {
   const waNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "";
 
   const isEnrolled = serverIsEnrolled;

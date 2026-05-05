@@ -1,88 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Quote, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 
+import { supabase } from "@/lib/supabase";
 
 interface Review {
   id: string;
-  name: string;
+  user_name: string;
   role: string;
   company: string;
   rating: number;
   text: string;
-  date: string;
-  avatar: string;
+  created_at: string;
+  avatar_url: string;
 }
 
-const reviews: Review[] = [
-  {
-    id: "1",
-    name: "Charlotte Williams",
-    role: "Junior Developer",
-    company: "Barclays",
-    rating: 5,
-    text: "Beyond Intern completely transformed my understanding of full-stack development. The hands-on projects were incredibly practical and the mentorship quality is unmatched. Landed my first dev role within 2 months!",
-    date: "2 weeks ago",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-  },
-  {
-    id: "2",
-    name: "Rajesh Patel",
-    role: "Data Analyst",
-    company: "Deloitte",
-    rating: 5,
-    text: "The Data Science course is genuinely world-class. Professor Williams explains complex ML concepts in such an accessible way. The community support and career resources made all the difference.",
-    date: "1 month ago",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-  },
-  {
-    id: "3",
-    name: "Emma Thompson",
-    role: "UX Designer",
-    company: "Revolut",
-    rating: 5,
-    text: "As someone transitioning from graphic design to UX, this platform was a godsend. The design course by Lisa Nakamura is pure gold. My portfolio went from basic to interview-ready.",
-    date: "3 weeks ago",
-    avatar: "https://randomuser.me/api/portraits/women/68.jpg",
-  },
-  {
-    id: "4",
-    name: "Omar Hassan",
-    role: "DevOps Engineer",
-    company: "Sky",
-    rating: 4,
-    text: "The AWS certification prep was outstanding. Alex Rivera's real-world examples make abstract cloud concepts click immediately. Highly recommend for anyone eyeing a cloud career.",
-    date: "1 month ago",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-  },
-  {
-    id: "5",
-    name: "Sophie Martinez",
-    role: "Product Manager",
-    company: "Monzo",
-    rating: 5,
-    text: "The PM bootcamp exceeded every expectation. The frameworks taught here are the same ones used at top tech companies. The live webinars are an amazing bonus for staying current.",
-    date: "2 months ago",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
-  },
-  {
-    id: "6",
-    name: "James O'Brien",
-    role: "Software Engineer",
-    company: "Starling Bank",
-    rating: 5,
-    text: "Went from a complete career changer to a confident developer in under 6 months. The structured learning path, weekly webinars, and amazing community made the journey enjoyable.",
-    date: "3 months ago",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-  },
-];
-
 function ReviewCard({ review, index }: { review: Review; index: number }) {
+  const formattedDate = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).format(new Date(review.created_at));
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -91,57 +35,74 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
       transition={{ duration: 0.4, delay: index * 0.08 }}
       className="glass-card rounded-2xl p-6 group hover:border-electric/20 transition-all"
     >
-      {/* Quote icon */}
       <Quote className="h-8 w-8 text-electric/20 mb-3" />
-
-      {/* Stars */}
       <div className="flex gap-0.5 mb-3">
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
             key={i}
             className={`h-4 w-4 ${
-              i < review.rating
-                ? "fill-gold text-gold"
-                : "text-slate-700"
+              i < review.rating ? "fill-gold text-gold" : "text-slate-700"
             }`}
           />
         ))}
       </div>
-
-      {/* Review text */}
       <p className="text-sm leading-relaxed text-slate-300">
         &ldquo;{review.text}&rdquo;
       </p>
-
-      {/* Author */}
       <div className="mt-5 flex items-center gap-3 pt-4 border-t border-white/5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={review.avatar}
-          alt={review.name}
-          className="h-10 w-10 rounded-full object-cover"
+          src={review.avatar_url || "https://randomuser.me/api/portraits/lego/1.jpg"}
+          alt={review.user_name}
+          className="h-10 w-10 rounded-full object-cover bg-white/10"
         />
         <div>
-          <p className="text-sm font-semibold text-white">{review.name}</p>
+          <p className="text-sm font-semibold text-white">{review.user_name}</p>
           <p className="text-xs text-slate-500">
-            {review.role} · {review.company}
+            {review.role} {review.company ? `· ${review.company}` : ""}
           </p>
         </div>
-        <span className="ml-auto text-[10px] text-slate-600">{review.date}</span>
+        <span className="ml-auto text-[10px] text-slate-600">{formattedDate}</span>
       </div>
     </motion.div>
   );
 }
 
 export function Testimonials() {
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [formData, setFormData] = useState({ name: "", review: "" });
   const [submitted, setSubmitted] = useState(false);
 
+  // Fetch reviews on mount
+  useEffect(() => {
+    async function fetchReviews() {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        setReviews(data);
+      }
+    }
+    fetchReviews();
+  }, []);
+
   const visibleReviews = showAll ? reviews : reviews.slice(0, 3);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Assuming you want to insert a review directly from the form (if it's public) or submit to an admin queue
+    // For now, let's do a simple insert if RLS allows, or just show success
+    await supabase.from("reviews").insert({
+      user_name: formData.name,
+      text: formData.review,
+      role: "Student",
+      company: "",
+      rating: 5, // Default rating for submitted
+      avatar_url: "https://randomuser.me/api/portraits/lego/1.jpg"
+    });
     setSubmitted(true);
     setFormData({ name: "", review: "" });
     setTimeout(() => setSubmitted(false), 3000);
@@ -152,7 +113,6 @@ export function Testimonials() {
       <div className="absolute inset-0 gradient-bg" />
 
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -170,7 +130,6 @@ export function Testimonials() {
           </p>
         </motion.div>
 
-        {/* Reviews grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <AnimatePresence>
             {visibleReviews.map((review, i) => (
@@ -179,7 +138,6 @@ export function Testimonials() {
           </AnimatePresence>
         </div>
 
-        {/* Show more/less */}
         {reviews.length > 3 && (
           <div className="mt-8 text-center">
             <Button
@@ -200,7 +158,6 @@ export function Testimonials() {
           </div>
         )}
 
-        {/* Submit review form */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

@@ -17,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { getUserCourses } from "./courses/actions";
 
 const badges = [
   { icon: Flame, label: "7-Day Streak", earned: false, gradient: "from-orange-500 to-red-500" },
@@ -40,6 +42,16 @@ export default function DashboardPage() {
   const { data: session } = useSession();
   const displayName =
     session?.user?.name || session?.user?.email?.split("@")[0] || "Student";
+    
+  const [enrolledCount, setEnrolledCount] = useState(0);
+  
+  useEffect(() => {
+    if (session?.user?.email) {
+      getUserCourses(session.user.email).then(courses => {
+        setEnrolledCount(courses.length);
+      }).catch(console.error);
+    }
+  }, [session?.user?.email]);
 
   return (
     <motion.div
@@ -61,7 +73,7 @@ export default function DashboardPage() {
           <div className="mt-4 flex flex-wrap gap-4 text-sm">
             <div className="flex items-center gap-2 text-slate-300">
               <BookOpen className="h-4 w-4 text-electric-light" />
-              0 Active Courses
+              {enrolledCount} Active Course{enrolledCount !== 1 ? 's' : ''}
             </div>
             <div className="flex items-center gap-2 text-slate-300">
               <Flame className="h-4 w-4 text-slate-500" />
@@ -85,7 +97,7 @@ export default function DashboardPage() {
             </div>
             <h2 className="text-xl font-bold text-white">Start Your Learning Journey</h2>
             <p className="mt-2 text-sm text-slate-400 max-w-md mx-auto">
-              Browse our 28 industry-aligned courses across 7 skill tracks.
+              Browse our 30+ industry-aligned courses across 7 skill tracks.
               Enrol in a course to unlock your dashboard progress tracking,
               achievements, and certifications.
             </p>

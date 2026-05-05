@@ -42,6 +42,17 @@ export async function assignCourse(email: string, courseId: string) {
       throw error;
     }
 
+    // Insert welcome notification
+    const { data: courseData } = await supabaseAdmin.from("raw_courses").select("title").eq("id", courseId).single();
+    if (courseData) {
+      await supabaseAdmin.from("notifications").insert({
+        title: "Course Enrollment",
+        message: `Welcome! Thank you for enrolling in ${courseData.title}!`,
+        type: "direct",
+        target_email: email.trim().toLowerCase(),
+      });
+    }
+
     return { success: true };
   } catch (error) {
     console.error("Assign error:", error);

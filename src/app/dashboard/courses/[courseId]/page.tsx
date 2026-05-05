@@ -117,7 +117,7 @@ export default async function CourseVideoPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <CourseVideoClient courseId={courseId} initialCourse={course} serverIsEnrolled={isEnrolled} />
+      <CourseVideoClient initialCourse={course} serverIsEnrolled={isEnrolled} />
     </>
   );
 }
