@@ -133,7 +133,7 @@ export default function DashboardPage() {
               <div className="mt-0.5 h-2 w-2 rounded-full shrink-0 bg-electric" />
               <div className="min-w-0">
                 <p className="text-sm text-slate-300">
-                  Welcome to Beyond Intern! 🚀 Explore our courses to start your journey.
+                  Welcome to Beyond Intern!  Explore our courses to start your journey.
                 </p>
                 <p className="text-[11px] text-slate-600 mt-1">Just now</p>
               </div>

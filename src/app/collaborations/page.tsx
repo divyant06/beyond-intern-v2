@@ -41,7 +41,7 @@ export default async function CollaborationsPage() {
 
           <div className="relative mx-auto max-w-4xl px-6 lg:px-8 text-center">
             <span className="inline-block px-4 py-2 rounded-full glass border border-white/10 text-sm text-slate-300 font-medium mb-8">
-              🤝 Partnerships &amp; Press
+               Partnerships &amp; Press
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
               Our Collaborations &amp;{" "}
