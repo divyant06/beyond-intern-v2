@@ -35,7 +35,7 @@ const footerSections = [
 const socials = [
   { label: "Twitter", icon: "𝕏", href: "https://x.com/BeyondIntern" },
   { label: "LinkedIn", icon: "in", href: "https://www.linkedin.com/company/beyondintern" },
-  { label: "YouTube", icon: "▶", href: "#" },
+  { label: "YouTube", icon: "▶", href: "https://www.youtube.com/@BeyondIntern" },
   { label: "Instagram", icon: "📷", href: "https://www.instagram.com/beyond.intern?igsh=MWQzbW9rcjNuamJkcg==" },
 ];
 
