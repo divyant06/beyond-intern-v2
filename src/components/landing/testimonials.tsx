@@ -6,73 +6,125 @@ import { Star, Quote, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+
+// ── Types ────────────────────────────────────────────────────────────────────
 
 interface Review {
   id: string;
-  user_name: string;
-  role: string;
-  company: string;
+  name: string;
+  designation: string;
   rating: number;
-  text: string;
+  review_text: string;
+  is_approved: boolean;
   created_at: string;
-  avatar_url: string;
 }
+
+// ── Fallback data (shown while Supabase loads or returns no results) ──────────
 
 const fallbackReviews: Review[] = [
   {
     id: "fallback-1",
-    user_name: "Charlotte Williams",
-    role: "Junior Developer",
-    company: "Barclays",
+    name: "Charlotte Williams",
+    designation: "Junior Developer at Barclays",
     rating: 5,
-    text: "Beyond Intern completely transformed my understanding of full-stack development. The hands-on projects were incredibly practical and the mentorship quality is unmatched. Landed my first dev role within 2 months!",
+    review_text:
+      "Beyond Intern completely transformed my understanding of full-stack development. The hands-on projects were incredibly practical and the mentorship quality is unmatched. Landed my first dev role within 2 months!",
+    is_approved: true,
     created_at: new Date().toISOString(),
-    avatar_url: "https://randomuser.me/api/portraits/women/44.jpg",
   },
   {
     id: "fallback-2",
-    user_name: "Rajesh Patel",
-    role: "Data Analyst",
-    company: "Deloitte",
+    name: "Rajesh Patel",
+    designation: "Data Analyst at Deloitte",
     rating: 5,
-    text: "The Data Science course is genuinely world-class. Professor Williams explains complex ML concepts in such an accessible way. The community support and career resources made all the difference.",
+    review_text:
+      "The Data Science course is genuinely world-class. Professor Williams explains complex ML concepts in such an accessible way. The community support and career resources made all the difference.",
+    is_approved: true,
     created_at: new Date().toISOString(),
-    avatar_url: "https://randomuser.me/api/portraits/men/32.jpg",
   },
   {
     id: "fallback-3",
-    user_name: "Emma Thompson",
-    role: "UX Designer",
-    company: "Revolut",
+    name: "Emma Thompson",
+    designation: "UX Designer at Revolut",
     rating: 5,
-    text: "As someone transitioning from graphic design to UX, this platform was a godsend. The design course by Lisa Nakamura is pure gold. My portfolio went from basic to interview-ready.",
+    review_text:
+      "As someone transitioning from graphic design to UX, this platform was a godsend. The design course by Lisa Nakamura is pure gold. My portfolio went from basic to interview-ready in just 6 weeks.",
+    is_approved: true,
     created_at: new Date().toISOString(),
-    avatar_url: "https://randomuser.me/api/portraits/women/68.jpg",
-  }
+  },
 ];
 
-function ReviewCard({ review, index }: { review: Review; index: number }) {
-  let formattedDate = "Recent";
-  if (review?.created_at) {
-    try {
-      formattedDate = new Intl.DateTimeFormat("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric"
-      }).format(new Date(review.created_at));
-    } catch {
-      formattedDate = "Recent";
-    }
-  }
+// ── Star rating selector ─────────────────────────────────────────────────────
 
-  const safeName = review?.user_name || "Beyond Intern Student";
-  const safeRole = review?.role || "Student";
-  const safeCompany = review?.company ? `· ${review.company}` : "";
-  const safeAvatar = review?.avatar_url || "https://randomuser.me/api/portraits/lego/1.jpg";
-  const safeRating = typeof review?.rating === 'number' ? review.rating : 5;
-  const safeText = review?.text || "An amazing learning experience that helped me level up my career!";
+function StarSelector({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const [hovered, setHovered] = useState(0);
+  return (
+    <div className="flex gap-1" role="group" aria-label="Star rating selector">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
+          onMouseEnter={() => setHovered(star)}
+          onMouseLeave={() => setHovered(0)}
+          onClick={() => onChange(star)}
+          className="transition-transform hover:scale-110 focus:outline-none"
+        >
+          <Star
+            className={`h-7 w-7 transition-colors ${
+              star <= (hovered || value)
+                ? "fill-gold text-gold"
+                : "text-slate-600 fill-transparent"
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Review Card ──────────────────────────────────────────────────────────────
+
+const TRUNCATE_LENGTH = 150;
+
+function ReviewCard({ review, index }: { review: Review; index: number }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const safeText = review.review_text || "An amazing learning experience!";
+  const safeName = review.name || "Beyond Intern Student";
+  const safeDesignation = review.designation || "Student";
+  const safeRating = typeof review.rating === "number" ? review.rating : 5;
+
+  const isLong = safeText.length > TRUNCATE_LENGTH;
+  const displayText =
+    isLong && !expanded ? `${safeText.slice(0, TRUNCATE_LENGTH)}…` : safeText;
+
+  // Generate deterministic avatar initials colour from name
+  const initials = safeName
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const avatarColors = [
+    "from-blue-500 to-purple-600",
+    "from-emerald-500 to-teal-600",
+    "from-orange-500 to-red-600",
+    "from-pink-500 to-rose-600",
+    "from-violet-500 to-indigo-600",
+    "from-cyan-500 to-blue-600",
+  ];
+  const colorIndex =
+    safeName.charCodeAt(0) % avatarColors.length;
 
   return (
     <motion.div
@@ -80,9 +132,12 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.4, delay: index * 0.08 }}
-      className="glass-card rounded-2xl p-6 group hover:border-electric/20 transition-all"
+      className="glass-card rounded-2xl p-6 group hover:border-electric/20 transition-all flex flex-col"
     >
-      <Quote className="h-8 w-8 text-electric/20 mb-3" />
+      {/* Decorative quote icon */}
+      <Quote className="h-8 w-8 text-electric/20 mb-3 shrink-0" />
+
+      {/* Stars */}
       <div className="flex gap-0.5 mb-3">
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
@@ -93,68 +148,153 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
           />
         ))}
       </div>
-      <p className="text-sm leading-relaxed text-slate-300">
-        &ldquo;{safeText}&rdquo;
-      </p>
+
+      {/* Review text with truncation */}
+      <div className="flex-1">
+        <p className="text-sm leading-relaxed text-slate-300">
+          &ldquo;{displayText}&rdquo;
+        </p>
+        {isLong && (
+          <button
+            onClick={() => setExpanded((prev) => !prev)}
+            className="mt-1.5 text-xs font-semibold text-electric hover:text-electric-light transition-colors"
+          >
+            {expanded ? "Read less" : "Read more"}
+          </button>
+        )}
+      </div>
+
+      {/* Author */}
       <div className="mt-5 flex items-center gap-3 pt-4 border-t border-white/5">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={safeAvatar}
-          alt={safeName}
-          className="h-10 w-10 rounded-full object-cover bg-white/10"
-        />
-        <div>
-          <p className="text-sm font-semibold text-white">{safeName}</p>
-          <p className="text-xs text-slate-500">
-            {safeRole} {safeCompany}
-          </p>
+        {/* Avatar: initials fallback */}
+        <div
+          className={`h-10 w-10 rounded-full bg-linear-to-br ${avatarColors[colorIndex]} flex items-center justify-center shrink-0`}
+          aria-hidden="true"
+        >
+          <span className="text-xs font-bold text-white">{initials}</span>
         </div>
-        <span className="ml-auto text-[10px] text-slate-600">{formattedDate}</span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white truncate">{safeName}</p>
+          <p className="text-xs text-slate-500 truncate">{safeDesignation}</p>
+        </div>
       </div>
     </motion.div>
   );
 }
 
-export function Testimonials() {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [showAll, setShowAll] = useState(false);
-  const [formData, setFormData] = useState({ name: "", review: "" });
-  const [submitted, setSubmitted] = useState(false);
+// ── Skeleton loader ───────────────────────────────────────────────────────────
 
-  // Fetch reviews on mount
+function ReviewSkeleton() {
+  return (
+    <div className="glass-card rounded-2xl p-6 animate-pulse space-y-3">
+      <div className="h-8 w-8 rounded-full bg-white/5" />
+      <div className="flex gap-1">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-4 w-4 rounded bg-white/5" />
+        ))}
+      </div>
+      <div className="space-y-2">
+        <div className="h-3 rounded bg-white/5 w-full" />
+        <div className="h-3 rounded bg-white/5 w-5/6" />
+        <div className="h-3 rounded bg-white/5 w-4/6" />
+      </div>
+      <div className="flex items-center gap-3 pt-4 border-t border-white/5">
+        <div className="h-10 w-10 rounded-full bg-white/5" />
+        <div className="space-y-1.5">
+          <div className="h-3 rounded bg-white/5 w-24" />
+          <div className="h-2.5 rounded bg-white/5 w-16" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+
+interface FormState {
+  name: string;
+  designation: string;
+  review: string;
+  rating: number;
+}
+
+const INITIAL_FORM: FormState = {
+  name: "",
+  designation: "",
+  review: "",
+  rating: 5,
+};
+
+export function Testimonials() {
+  const { toast } = useToast();
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+  const [formData, setFormData] = useState<FormState>(INITIAL_FORM);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ── Fetch approved reviews ──────────────────────────────────────────────
   useEffect(() => {
     async function fetchReviews() {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from("reviews")
-        .select("*")
+        .select("id, name, designation, rating, review_text, is_approved, created_at")
+        .eq("is_approved", true)
         .order("created_at", { ascending: false });
 
       if (!error && data) {
-        setReviews(data);
+        setReviews(data as Review[]);
       }
+      setIsLoading(false);
     }
     fetchReviews();
   }, []);
 
-  const safeReviews = Array.isArray(reviews) ? reviews : [];
-  const displayReviews = safeReviews.length > 0 ? safeReviews : fallbackReviews;
+  // ── Derived display data ────────────────────────────────────────────────
+  const displayReviews =
+    reviews.length > 0 ? reviews : fallbackReviews;
   const visibleReviews = showAll ? displayReviews : displayReviews.slice(0, 3);
 
+  // ── Submit handler ──────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Assuming you want to insert a review directly from the form (if it's public) or submit to an admin queue
-    // For now, let's do a simple insert if RLS allows, or just show success
-    await supabase.from("reviews").insert({
-      user_name: formData.name,
-      text: formData.review,
-      role: "Student",
-      company: "",
-      rating: 5, // Default rating for submitted
-      avatar_url: "https://randomuser.me/api/portraits/lego/1.jpg"
+
+    if (formData.rating === 0) {
+      toast({
+        title: "Rating required",
+        description: "Please select a star rating before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { error } = await supabase.from("reviews").insert({
+      name: formData.name.trim(),
+      designation: formData.designation.trim(),
+      review_text: formData.review.trim(),
+      rating: formData.rating,
+      is_approved: false, // Pending admin approval
     });
-    setSubmitted(true);
-    setFormData({ name: "", review: "" });
-    setTimeout(() => setSubmitted(false), 3000);
+    setIsSubmitting(false);
+
+    if (error) {
+      toast({
+        title: "Submission failed",
+        description: "Something went wrong. Please try again later.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "🎉 Review submitted!",
+      description:
+        "Thanks for sharing your experience. Your review will appear once approved.",
+    });
+    setFormData(INITIAL_FORM);
   };
 
   return (
@@ -162,6 +302,7 @@ export function Testimonials() {
       <div className="absolute inset-0 gradient-bg" />
 
       <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+        {/* Section header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -179,15 +320,21 @@ export function Testimonials() {
           </p>
         </motion.div>
 
+        {/* Review grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <AnimatePresence>
-            {visibleReviews.map((review, i) => (
-              <ReviewCard key={review.id} review={review} index={i} />
-            ))}
-          </AnimatePresence>
+          {isLoading ? (
+            Array.from({ length: 3 }).map((_, i) => <ReviewSkeleton key={i} />)
+          ) : (
+            <AnimatePresence>
+              {visibleReviews.map((review, i) => (
+                <ReviewCard key={review.id} review={review} index={i} />
+              ))}
+            </AnimatePresence>
+          )}
         </div>
 
-        {reviews.length > 3 && (
+        {/* Show more/less toggle */}
+        {!isLoading && displayReviews.length > 3 && (
           <div className="mt-8 text-center">
             <Button
               variant="outline"
@@ -207,6 +354,7 @@ export function Testimonials() {
           </div>
         )}
 
+        {/* Review form */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -221,52 +369,62 @@ export function Testimonials() {
               Were a Beyond Intern student? We&apos;d love to hear from you!
             </p>
 
-            {submitted ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-6"
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Name */}
+              <Input
+                id="review-name"
+                placeholder="Your full name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                required
+                className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 h-11"
+              />
+
+              {/* Designation */}
+              <Input
+                id="review-designation"
+                placeholder="Your designation / position (e.g. Student, Marketing Executive)"
+                value={formData.designation}
+                onChange={(e) =>
+                  setFormData({ ...formData, designation: e.target.value })
+                }
+                required
+                className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 h-11"
+              />
+
+              {/* Star rating */}
+              <div>
+                <p className="text-xs text-slate-400 mb-2">Your rating *</p>
+                <StarSelector
+                  value={formData.rating}
+                  onChange={(v) => setFormData({ ...formData, rating: v })}
+                />
+              </div>
+
+              {/* Review text */}
+              <textarea
+                id="review-text"
+                placeholder="Tell us about your experience..."
+                value={formData.review}
+                onChange={(e) =>
+                  setFormData({ ...formData, review: e.target.value })
+                }
+                required
+                rows={4}
+                className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-electric/50 focus:outline-none focus:ring-1 focus:ring-electric/30 resize-none"
+              />
+
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full gradient-electric text-white font-semibold rounded-full h-11 glow-blue hover:opacity-90 transition-opacity disabled:opacity-60"
               >
-                <div className="text-4xl mb-3">🎉</div>
-                <p className="text-lg font-semibold text-white">Thank you!</p>
-                <p className="text-sm text-slate-400 mt-1">
-                  Your review has been submitted for approval.
-                </p>
-              </motion.div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Input
-                    placeholder="Your name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                    className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 h-11"
-                  />
-                </div>
-                <div>
-                  <textarea
-                    placeholder="Tell us about your experience..."
-                    value={formData.review}
-                    onChange={(e) =>
-                      setFormData({ ...formData, review: e.target.value })
-                    }
-                    required
-                    rows={4}
-                    className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-electric/50 focus:outline-none focus:ring-1 focus:ring-electric/30 resize-none"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full gradient-electric text-white font-semibold rounded-full h-11 glow-blue hover:opacity-90 transition-opacity"
-                >
-                  Submit Review
-                  <Send className="ml-2 h-4 w-4" />
-                </Button>
-              </form>
-            )}
+                {isSubmitting ? "Submitting…" : "Submit Review"}
+                <Send className="ml-2 h-4 w-4" />
+              </Button>
+            </form>
           </div>
         </motion.div>
       </div>

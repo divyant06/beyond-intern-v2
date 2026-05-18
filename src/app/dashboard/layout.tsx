@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { TopHeader } from "@/components/dashboard/top-header";
+import { NotificationPrompt } from "@/components/dashboard/notification-prompt";
 
 export default function DashboardLayout({
   children,
@@ -19,6 +20,7 @@ export default function DashboardLayout({
       />
       <div className="flex-1 flex flex-col min-w-0">
         <TopHeader onMenuClick={() => setMobileSidebarOpen((v) => !v)} />
+        <NotificationPrompt />
         <main className="flex-1 p-6">{children}</main>
       </div>
     </div>

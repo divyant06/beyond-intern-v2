@@ -10,7 +10,6 @@ import {
 import type {
   CarouselImageRow,
   BrandPartnerRow,
-  PressArticleRow,
 } from "@/app/dashboard/admin/actions";
 
 export const dynamic = "force-dynamic";
