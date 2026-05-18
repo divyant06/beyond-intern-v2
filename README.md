@@ -2,7 +2,7 @@
 
 Beyond Intern is an enterprise-grade, full-stack educational platform engineered to bridge the gap between academic learning and industry demands. Built with a focus on high performance, modern aesthetic (glassmorphism), and AI-driven user engagement, the platform delivers a seamless experience from course discovery to checkout and learning.
 
-## 🚀 The Competitive Edge: Why This Architecture Excels
+##  The Competitive Edge: Why This Architecture Excels
 
 Unlike legacy LMS platforms (like WordPress/LearnDash or basic React apps), Beyond Intern is built on a modern, edge-ready architecture:
 * **Blazing Fast Performance:** Utilizing Next.js 15 App Router and React Server Components (RSC) to ship zero-client-side JavaScript where possible, resulting in near-instant page loads and perfect Core Web Vitals.
@@ -10,7 +10,7 @@ Unlike legacy LMS platforms (like WordPress/LearnDash or basic React apps), Beyo
 * **Enterprise-Grade Security:** Session management via NextAuth (OAuth & Magic Links), completely severing the frontend from raw database access.
 * **High-Converting UI/UX:** Heavily optimized user flows, premium Tailwind CSS styling, translucent glassmorphism interfaces, and dynamic data pagination for frictionless browsing.
 
-## 💻 Tech Stack
+##  Tech Stack
 
 **Frontend & Core Framework:**
 * **Next.js 15** (App Router, Server Actions, Turbopack)
@@ -25,7 +25,7 @@ Unlike legacy LMS platforms (like WordPress/LearnDash or basic React apps), Beyo
 * **Vercel:** Edge network deployment and CI/CD pipeline.
 * **Google Generative AI SDK:** Streaming LLM integration (Gemini 2.0 Flash).
 
-## ✨ Core Features & Components
+##  Core Features & Components
 
 * **AI Learning Advisor (`@chatbot.tsx`):** A floating, context-aware AI assistant that guides users toward the right career tracks, utilizing streaming server responses for zero-latency communication.
 * **Dynamic Course Engine (`@course-grid.tsx`):** A responsive, paginated grid rendering high-fidelity course cards with dynamic pricing, categorization, and Unsplash API image handling.
@@ -33,7 +33,7 @@ Unlike legacy LMS platforms (like WordPress/LearnDash or basic React apps), Beyo
 * **Student Dashboard (`@dashboard/page.tsx`):** A personalized, authenticated hub tracking active courses, learning streaks, and gamified achievement badges.
 * **Live Webinar System (`@webinar/page.tsx`):** Time-aware event scheduling with conditional logic for "Live", "Soon", and "Past" states, integrated with lead-capture forms.
 
-## 🗄️ Database Schema (Overview)
+##  Database Schema (Overview)
 
 The platform relies on a normalized PostgreSQL database designed for scale. Key tables include:
 * `Users`: Manages authentications, roles (student/admin), and profile metadata.
@@ -42,7 +42,7 @@ The platform relies on a normalized PostgreSQL database designed for scale. Key 
 * `Webinar_Registrations`: Captures lead data for upcoming live events.
 * `Transactions`: Audit trail for Stripe payment intents and webhook receipts.
 
-## 🔮 Future Scope & Roadmap
+## \ Future Scope & Roadmap
 
 As the platform scales, the architecture is primed for the following expansions:
 1. **Proprietary Video Hosting:** Integrating an HLS video streaming provider (like Mux or AWS MediaLive) for DRM-protected course consumption directly within the dashboard.
