@@ -1,22 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { Mail, ArrowRight, Check, Sparkles } from "lucide-react";
+import { Mail, ArrowRight, Check, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { subscribeToNewsletter } from "@/app/actions/newsletter";
 
 export function Newsletter() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email) {
-      setSubmitted(true);
-      setEmail("");
-      setTimeout(() => setSubmitted(false), 4000);
-    }
+    if (!email.trim()) return;
+
+    startTransition(async () => {
+      const result = await subscribeToNewsletter(email);
+
+      if (result.success) {
+        setSubmitted(true);
+        setEmail("");
+        toast({
+          title: "You're on the list! 🎉",
+          description: result.message,
+        });
+        // Reset success banner after 4 seconds so user can re-view the form
+        setTimeout(() => setSubmitted(false), 4000);
+      } else {
+        toast({
+          title: "Subscription failed",
+          description: result.message,
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   return (
@@ -90,15 +111,26 @@ export function Newsletter() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="h-12 pl-11 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 rounded-full sm:rounded-r-none"
+                    disabled={isPending}
+                    className="h-12 pl-11 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-electric/50 rounded-full sm:rounded-r-none disabled:opacity-60"
                   />
                 </div>
                 <Button
                   type="submit"
-                  className="h-12 gradient-electric text-white font-semibold rounded-full px-8 glow-blue hover:opacity-90 transition-opacity w-full sm:w-auto sm:rounded-l-none"
+                  disabled={isPending}
+                  className="h-12 gradient-electric text-white font-semibold rounded-full px-8 glow-blue hover:opacity-90 transition-opacity w-full sm:w-auto sm:rounded-l-none disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  Subscribe
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Subscribing...
+                    </>
+                  ) : (
+                    <>
+                      Subscribe
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               </form>
             )}
