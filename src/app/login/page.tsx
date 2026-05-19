@@ -8,6 +8,8 @@ import { Mail, Lock, ArrowRight, Eye, EyeOff, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import { sendWelcomeEmail } from "@/app/actions/auth";
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -28,12 +30,29 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
       }
-      // Mock Sign Up logic
-      console.log("Signing up:", { fullName, email, password });
-      setTimeout(() => {
-        setIsSignUp(false);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          }
+        }
+      });
+
+      if (error) {
+        alert(error.message);
         setIsLoading(false);
-      }, 1500);
+        return;
+      }
+
+      // Immediately send welcome email (non-blocking)
+      sendWelcomeEmail(email).catch(console.error);
+
+      alert("Account created successfully!");
+      setIsSignUp(false);
+      setIsLoading(false);
     } else {
       await signIn("credentials", {
         email,

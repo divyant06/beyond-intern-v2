@@ -54,7 +54,7 @@ export async function subscribeToNewsletter(
     const { error: emailError } = await resend.emails.send({
       from: "Beyond Intern <info@beyondintern.com>",
       to: trimmed,
-      subject: "Welcome to the Inside Track 🚀",
+      subject: "Welcome to the Inside Track ",
       html: `<div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;"><h2 style="color: #1a365d;">Welcome to the Beyond Intern community!</h2><p>You're officially on the list. You've just taken the first step toward bridging the gap between academic learning and industry demands.</p><p>Keep an eye on your inbox—we have some exciting early access courses and webinar invites coming your way soon.</p><p>Stay ahead,<br><strong>The Beyond Intern Team</strong></p></div>`,
     });
 
@@ -68,7 +68,7 @@ export async function subscribeToNewsletter(
 
     return {
       success: true,
-      message: "You're on the list! Check your inbox for a welcome gift 🎁",
+      message: "You're on the list! Check your email for a welcome gift 🎁",
     };
   } catch (err) {
     console.error("[newsletter] Unexpected error:", err);
