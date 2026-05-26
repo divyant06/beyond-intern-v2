@@ -1,13 +1,6 @@
 import type { MetadataRoute } from "next";
-import { createClient } from "@supabase/supabase-js";
 
 const BASE_URL = "https://www.beyondintern.com";
-
-// Use anon key — sitemap generation is public read-only
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // ── Static core routes ────────────────────────────────────────────────────
@@ -56,26 +49,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // ── Dynamic course routes ─────────────────────────────────────────────────
-  let courseRoutes: MetadataRoute.Sitemap = [];
+  // EXPLICITLY FILTER OUT and exclude any route path that starts with or contains /dashboard
+  const finalRoutes = staticRoutes.filter((route) => {
+    const urlString = route.url.toString();
+    return !urlString.includes("/dashboard");
+  });
 
-  try {
-    const { data: courses, error } = await supabase
-      .from("raw_courses")
-      .select("id, created_at")
-      .order("created_at", { ascending: true });
-
-    if (!error && courses) {
-      courseRoutes = courses.map((course) => ({
-        url: `${BASE_URL}/dashboard/courses/${course.id}`,
-        lastModified: course.created_at ? new Date(course.created_at) : new Date(),
-        changeFrequency: "monthly" as const,
-        priority: 0.8,
-      }));
-    }
-  } catch (err) {
-    console.error("[sitemap] Failed to fetch courses:", err);
-  }
-
-  return [...staticRoutes, ...courseRoutes];
+  return finalRoutes;
 }
