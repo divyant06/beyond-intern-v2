@@ -8,13 +8,14 @@ interface PageProps {
 }
 
 // Server-side Supabase client (anon key is fine for public course data)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { courseId } = await params;
+
+  if (!supabase) return { title: "Course unavailable", description: "Course data is temporarily unavailable." };
 
   const { data: course } = await supabase
     .from("raw_courses")
@@ -68,6 +69,8 @@ import { checkEnrollment } from "../actions";
 export default async function CourseVideoPage({ params }: PageProps) {
   const { courseId } = await params;
 
+  if (!supabase) return null;
+
   const { data: course } = await supabase
     .from("raw_courses")
     .select("id, title, description, price, curriculum, career_outcomes, schedule, category, level, duration, video_modules, curriculum_syllabus, schedule_text, assignment_link")
@@ -81,7 +84,7 @@ export default async function CourseVideoPage({ params }: PageProps) {
   const session = await getServerSession(authOptions);
   let isEnrolled = false;
   if (session?.user?.email) {
-    isEnrolled = await checkEnrollment(session.user.email, courseId);
+    isEnrolled = await checkEnrollment(courseId);
   }
 
   let numericPrice = "0";

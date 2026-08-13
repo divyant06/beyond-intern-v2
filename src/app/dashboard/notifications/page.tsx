@@ -42,7 +42,7 @@ export default function NotificationsPage() {
   useEffect(() => {
     async function loadNotifications() {
       if (session?.user?.email) {
-        const data = await fetchNotifications(session.user.email);
+        const data = await fetchNotifications();
         setNotifications(data || []);
       }
       setLoading(false);

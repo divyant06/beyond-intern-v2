@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 export interface Module {
   id: string;
@@ -26,7 +26,7 @@ export interface Course {
     | "Career Readiness"
     | string;
   duration: string;
-  price: number | null; // GBP £, null = complimentary with other courses
+  price: number | null;
   level: string;
   weeklyCommitment: string;
   description: string;
@@ -39,25 +39,22 @@ export interface Course {
   schedule?: Record<string, unknown>;
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+let supabaseClient: SupabaseClient | null = null;
 
-// Ensure we create a fresh client
-export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  global: {
-    fetch: (url, options) => {
-      return fetch(url, { ...options, cache: "no-store" });
-    },
-  },
-});
+function getSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) throw new Error("Supabase public credentials are not configured.");
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { fetch: (url, options) => fetch(url, { ...options, cache: "no-store" }) },
+  });
+  return supabaseClient;
+}
 
 export async function fetchLiveCourses(): Promise<Course[]> {
   try {
-    const { data, error } = await supabaseClient
-      .from("raw_courses")
-      .select("*")
-      .order("created_at", { ascending: false });
-
+    const { data, error } = await getSupabaseClient().from("raw_courses").select("*").order("created_at", { ascending: false });
     if (error) throw error;
     return data || [];
   } catch (error) {

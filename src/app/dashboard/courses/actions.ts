@@ -1,20 +1,21 @@
 "use server";
 
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { requireUser } from "@/lib/auth-guards";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
-export async function getUserCourses(email: string) {
+export async function getUserCourses() {
   try {
+    const user = await requireUser();
+    const supabaseAdmin = getSupabaseAdmin();
     const { data: userCourses, error } = await supabaseAdmin
       .from("user_courses")
       .select("course_id, created_at")
-      .eq("user_email", email);
+      .eq("user_email", user.email);
 
     if (error) throw error;
     if (!userCourses || userCourses.length === 0) return [];
 
     const courseIds = userCourses.map((uc) => uc.course_id);
-
-    // Ensure we opt-out of cache for this fetch (Next.js server action context)
     const { data: rawCourses, error: courseError } = await supabaseAdmin
       .from("raw_courses")
       .select("*")
@@ -23,36 +24,32 @@ export async function getUserCourses(email: string) {
     if (courseError) throw courseError;
 
     const coursesMap = new Map(rawCourses?.map((c) => [c.id, c]) || []);
-
-    const enriched = userCourses
+    return userCourses
       .map((uc) => {
         const courseDetails = coursesMap.get(uc.course_id);
         if (!courseDetails) return null;
-        return {
-          ...courseDetails,
-          enrolledAt: uc.created_at,
-        };
+        return { ...courseDetails, enrolledAt: uc.created_at };
       })
       .filter(Boolean);
-
-    return enriched;
   } catch (error) {
     console.error("Database error:", error);
     return [];
   }
 }
 
-export async function checkEnrollment(email: string, courseId: string): Promise<boolean> {
+export async function checkEnrollment(courseId: string): Promise<boolean> {
   try {
+    const user = await requireUser();
+    const supabaseAdmin = getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from("user_courses")
       .select("course_id")
-      .eq("user_email", email)
+      .eq("user_email", user.email)
       .eq("course_id", courseId)
       .limit(1);
 
     if (error) throw error;
-    return data && data.length > 0;
+    return Boolean(data?.length);
   } catch (error) {
     console.error("Check enrollment error:", error);
     return false;
