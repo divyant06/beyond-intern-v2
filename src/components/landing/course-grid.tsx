@@ -7,13 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
-import { createClient } from "@supabase/supabase-js";
-
-// ── Supabase client (public anon key — read-only) ──────────────────────────────
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from "@/lib/supabase";
 
 // ── DB course shape ────────────────────────────────────────────────────────────
 interface DbCourse {
@@ -185,12 +179,12 @@ function CourseCard({ course, index }: { course: DbCourse; index: number }) {
           <span className="text-xl font-bold text-white">
             {course.price || 'Free'}
           </span>
-          <Link href={`/dashboard/courses/${course.id}`}>
+          <Link href={`/checkout?course=${encodeURIComponent(course.id)}`}>
             <Button
               size="sm"
               className="gradient-electric text-white rounded-full px-5 text-xs font-semibold hover:opacity-90 transition-opacity"
             >
-              Enroll Now
+              View Course
               <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Button>
           </Link>
@@ -204,10 +198,10 @@ function CourseCard({ course, index }: { course: DbCourse; index: number }) {
 export function CourseGrid() {
   const [courses, setCourses] = useState<DbCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("All");
   const [showAll, setShowAll] = useState(false);
 
-  // Fetch courses from Supabase
   useEffect(() => {
     async function load() {
       const { data, error } = await supabase
@@ -215,7 +209,11 @@ export function CourseGrid() {
         .select("*")
         .order("created_at", { ascending: true });
 
-      if (!error && data) setCourses(data);
+      if (error) {
+        setLoadError(true);
+      } else if (data) {
+        setCourses(data);
+      }
       setLoading(false);
     }
     load();
@@ -247,7 +245,7 @@ export function CourseGrid() {
             Learn from the <span className="gradient-text">Best in Industry</span>
           </h2>
           <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
-            {courses.length}+ industry-aligned courses across 7 skill tracks. All priced with lifetime access and a certificate of completion.
+            {courses.length || 30}+ industry-aligned courses across 7 skill tracks. Every programme includes lifetime access and a certificate of completion.
           </p>
         </motion.div>
 
@@ -262,11 +260,13 @@ export function CourseGrid() {
           {ALL_CATEGORIES.map((cat) => (
             <button
               key={cat}
+              type="button"
+              aria-pressed={activeFilter === cat}
               onClick={() => {
                 setActiveFilter(cat);
                 setShowAll(false);
               }}
-              className={`text-xs font-medium px-4 py-1.5 rounded-full border transition-all ${
+              className={`text-xs font-medium px-4 py-1.5 rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-electric-light ${
                 activeFilter === cat
                   ? "gradient-electric text-white border-transparent glow-blue"
                   : "border-white/10 text-slate-400 hover:text-white hover:border-white/20 bg-white/5"
@@ -281,6 +281,11 @@ export function CourseGrid() {
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="h-8 w-8 text-electric animate-spin" />
+          </div>
+        ) : loadError ? (
+          <div className="py-20 text-center">
+            <p className="text-slate-300">Courses are temporarily unavailable.</p>
+            <p className="mt-2 text-sm text-slate-500">Please try again in a moment.</p>
           </div>
         ) : courses.length === 0 ? (
           <div className="text-center py-20">

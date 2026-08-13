@@ -3,6 +3,24 @@ import { streamText } from "ai";
 
 export const maxDuration = 30;
 
+const MAX_MESSAGES = 20;
+const MAX_MESSAGE_LENGTH = 2000;
+
+function trimMessages(messages: unknown) {
+  if (!Array.isArray(messages)) return null;
+  const trimmed = messages.slice(-MAX_MESSAGES).filter((item) => {
+    if (!item || typeof item !== "object") return false;
+    const message = item as { role?: unknown; content?: unknown };
+    return (
+      (message.role === "user" || message.role === "assistant") &&
+      typeof message.content === "string" &&
+      message.content.trim().length > 0 &&
+      message.content.length <= MAX_MESSAGE_LENGTH
+    );
+  });
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 const SYSTEM_PROMPT = `You are the "Beyond Intern AI Advisor" — the official AI assistant for the Beyond Intern platform.
 
 ## Your Personality
@@ -44,11 +62,11 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { messages } = body;
+    const messages = trimMessages(body?.messages);
 
-    if (!messages || !Array.isArray(messages)) {
+    if (!messages) {
       return new Response(
-        JSON.stringify({ error: "Invalid request: messages array required." }),
+        JSON.stringify({ error: "Invalid or empty messages array." }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }

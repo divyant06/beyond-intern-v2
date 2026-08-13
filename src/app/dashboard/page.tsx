@@ -46,12 +46,12 @@ export default function DashboardPage() {
   const [enrolledCount, setEnrolledCount] = useState(0);
   
   useEffect(() => {
-    if (session?.user?.email) {
-      getUserCourses(session.user.email).then(courses => {
+    if (session?.user) {
+      getUserCourses().then((courses) => {
         setEnrolledCount(courses.length);
       }).catch(console.error);
     }
-  }, [session?.user?.email]);
+  }, [session?.user]);
 
   return (
     <motion.div

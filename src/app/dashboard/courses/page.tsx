@@ -100,10 +100,10 @@ export default function CoursesPage() {
 
   useEffect(() => {
     async function fetchEnrolledCourses() {
-      if (!session?.user?.email) return;
+      if (status !== "authenticated") return;
       setIsLoading(true);
       try {
-        const data = await getUserCourses(session.user.email);
+        const data = await getUserCourses();
         setUserCourses(data);
       } catch (err) {
         console.error("Failed to fetch enrolled courses:", err);

@@ -2,24 +2,16 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-const protectedPaths = ["/dashboard", "/checkout", "/admin"];
-
 export async function middleware(request: NextRequest) {
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET || "beyond-intern-dev-secret-key",
-  });
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret && process.env.NODE_ENV === "production") {
+    return new NextResponse("Authentication is not configured.", { status: 503 });
+  }
 
-  const { pathname } = request.nextUrl;
-
-  // Check if the current path starts with any protected path
-  const isProtected = protectedPaths.some((path) =>
-    pathname.startsWith(path)
-  );
-
-  if (isProtected && !token) {
+  const token = await getToken({ req: request, secret });
+  if (!token) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
