@@ -48,6 +48,7 @@ export default function LiveTheaterPage() {
 
   // ── Webinar data ──
   const [webinar, setWebinar] = useState<ActiveWebinar | null>(null);
+  const [now] = useState(() => Date.now());
 
   useEffect(() => {
     getActiveWebinar().then((data) => {
@@ -56,10 +57,10 @@ export default function LiveTheaterPage() {
   }, []);
 
   // Dynamic values with fallbacks
-  const webinarTitle = webinar?.title || "Boost Your Career & Land Internships";
-  const webinarSpeaker = webinar?.speaker || "Nandani Sharma";
-  const webinarDate = webinar?.webinar_date || "29th March 2026";
-  const webinarTime = webinar?.webinar_time || "7:00 PM IST";
+  const webinarTitle = webinar?.title || "Beyond Intern Live Webinar";
+  const webinarSpeaker = webinar?.speaker || "To be announced";
+  const webinarDate = webinar?.webinar_date || "Date to be announced";
+  const webinarTime = webinar?.webinar_time || "Time to be announced";
 
   // Derive status date from webinar_date field (best-effort)
   const statusDate = useMemo(() => {
@@ -67,8 +68,8 @@ export default function LiveTheaterPage() {
       const parsed = new Date(webinar.webinar_date);
       if (!isNaN(parsed.getTime())) return parsed;
     }
-    return new Date("2026-03-29T14:00:00Z");
-  }, [webinar]);
+    return new Date(now + 7 * 24 * 60 * 60 * 1000);
+  }, [webinar, now]);
 
   // ── Stream state ──
   const [isStreaming, setIsStreaming] = useState(false);
